@@ -1,0 +1,17 @@
+{
+  "name": "Raport Endoskopie",
+  "short_name": "Endoskopi",
+  "description": "Raporte gastroskopie dhe kolonoskopie offline, me arkiv pacientësh dhe backup të enkriptuar.",
+  "lang": "sq",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

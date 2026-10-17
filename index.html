@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Endoskopi">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<title>Raport Endoskopie</title>
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#f4f6f9; --panel:#ffffff; --panel-2:#f8fafc; --field:#ffffff;
+    --ink:#0f172a; --ink-2:#334155; --muted:#64748b; --line:#e2e8f0; --line-2:#cbd5e1;
+    --accent:#0f766e; --accent-ink:#ffffff; --accent-weak:#ccfbf1; --accent-soft:#f0fdfa; --accent-line:#5eead4;
+    --top:#0f172a; --top-ink:#e2e8f0; --top-btn:#1e293b; --top-line:#334155;
+    --warn-bg:#fffbeb; --warn-line:#fde68a; --warn-ink:#78350f; --err:#b91c1c;
+    --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 14px rgba(15,23,42,.04);
+    --radius:12px; --topH:58px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme=light]){
+      color-scheme:dark;
+      --bg:#0b1120; --panel:#111827; --panel-2:#0f172a; --field:#0b1220;
+      --ink:#e5e7eb; --ink-2:#cbd5e1; --muted:#94a3b8; --line:#1f2937; --line-2:#334155;
+      --accent:#2dd4bf; --accent-ink:#042f2e; --accent-weak:rgba(45,212,191,.18); --accent-soft:rgba(45,212,191,.07); --accent-line:#0d9488;
+      --top:#020617; --top-ink:#e2e8f0; --top-btn:#111827; --top-line:#1f2937;
+      --warn-bg:rgba(245,158,11,.1); --warn-line:#92400e; --warn-ink:#fcd34d; --err:#f87171;
+      --shadow:none;
+    }
+  }
+  :root[data-theme=dark]{
+    color-scheme:dark;
+    --bg:#0b1120; --panel:#111827; --panel-2:#0f172a; --field:#0b1220;
+    --ink:#e5e7eb; --ink-2:#cbd5e1; --muted:#94a3b8; --line:#1f2937; --line-2:#334155;
+    --accent:#2dd4bf; --accent-ink:#042f2e; --accent-weak:rgba(45,212,191,.18); --accent-soft:rgba(45,212,191,.07); --accent-line:#0d9488;
+    --top:#020617; --top-ink:#e2e8f0; --top-btn:#111827; --top-line:#1f2937;
+    --warn-bg:rgba(245,158,11,.1); --warn-line:#92400e; --warn-ink:#fcd34d; --err:#f87171;
+    --shadow:none;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  button,input,select,textarea{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* ---------- Top bar ---------- */
+  .top{position:sticky;top:0;z-index:30;background:var(--top);color:var(--top-ink);border-bottom:1px solid var(--top-line)}
+  .top .in{max-width:1500px;margin:0 auto;padding:10px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .brand{font-weight:700;letter-spacing:.2px;display:flex;align-items:center;gap:8px;margin-right:4px}
+  .brand .logo{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#14b8a6,#0f766e);display:grid;place-items:center;font-size:14px}
+  .status{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+  #saved{font-size:12px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+  .spacer{flex:1}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:9px;border:1px solid transparent;background:var(--accent);color:var(--accent-ink);font-weight:600;cursor:pointer;white-space:nowrap}
+  .btn:hover{filter:brightness(1.08)}
+  .btn .ic{font-size:15px;line-height:1}
+  .btn.sec{background:var(--top-btn);border-color:var(--top-line);color:var(--top-ink)}
+  .btn.light{background:var(--field);border-color:var(--line);color:var(--ink)}
+  .btn.ghost{background:transparent;border:1px dashed var(--line-2);color:inherit}
+  .btn.sm{padding:5px 9px;font-size:12px;border-radius:7px}
+  .top .btn{background:var(--top-btn);border-color:var(--top-line);color:var(--top-ink)}
+  .top .btn.primary{background:#14b8a6;border-color:#14b8a6;color:#042f2e}
+  .bk{font-size:11.5px;padding:1px 8px;border-radius:999px;cursor:pointer;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#cbd5e1;width:fit-content;margin-top:2px}
+  .bk.warn{background:#7c2d12;border-color:#ea580c;color:#ffedd5}
+  .bk.ok{background:#134e4a;border-color:#14b8a6;color:#ccfbf1}
+  .kbd{font-size:11px;opacity:.7;font-weight:500}
+  @media (max-width:1280px){ .top .lbl{display:none} .top .btn{padding:8px 10px} }
+  @media (max-width:560px){
+    .brand .txt,#saved,.top .lbl2{display:none}
+    .top .in{flex-wrap:nowrap;gap:6px;padding:8px 12px}
+    .top .btn{padding:8px 9px}
+  }
+
+  /* ---------- Section nav ---------- */
+  .snav{position:sticky;top:var(--topH);z-index:20;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:10px 0;margin:-16px 0 6px;background:var(--bg)}
+  .snav::-webkit-scrollbar{display:none}
+  .snav a{flex:none;display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);text-decoration:none;font-size:12.5px;font-weight:550}
+  .snav a .d{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;font-weight:700;background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
+  .snav a.done .d{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .snav a.active{border-color:var(--accent);color:var(--ink);box-shadow:0 0 0 2px var(--accent-weak)}
+
+  /* ---------- Mobile tabs ---------- */
+  .mtabs{display:none}
+  @media (max-width:1100px){
+    .mtabs{display:flex;position:sticky;top:var(--topH);z-index:25;background:var(--bg);padding:10px 16px 0;gap:0;max-width:640px;margin:0 auto}
+    .mtabs button{flex:1;padding:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);font-weight:600;cursor:pointer}
+    .mtabs button:first-child{border-radius:10px 0 0 10px}
+    .mtabs button:last-child{border-radius:0 10px 10px 0;border-left:0}
+    .mtabs button[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+    body.view-report .form-col{display:none}
+    body:not(.view-report) .preview-col{display:none}
+    .snav{top:calc(var(--topH) + 50px)}
+  }
+
+  /* ---------- Dialogs ---------- */
+  dialog{border:1px solid var(--line);border-radius:14px;padding:0;width:min(780px,calc(100vw - 32px));max-height:calc(100vh - 48px);box-shadow:0 30px 80px rgba(2,6,23,.45);color:var(--ink);background:var(--panel)}
+  dialog::backdrop{background:rgba(15,23,42,.55);backdrop-filter:blur(2px)}
+  .dh{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .dh h2{margin:0;font-size:17px}
+  .dh .x{margin-left:auto;border:0;background:transparent;font-size:20px;cursor:pointer;color:var(--muted)}
+  .db{padding:14px 18px;overflow:auto;max-height:calc(100vh - 230px)}
+  .df{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 18px;border-top:1px solid var(--line);background:var(--panel-2)}
+  .alist{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .alist li{display:flex;gap:12px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:10px}
+  .alist li.cur{border-color:var(--accent-line);background:var(--accent-soft)}
+  .alist .who{flex:1;min-width:0}
+  .alist .nm{font-weight:650}
+  .alist .mt{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .alist button{flex:none}
+  .stat{font-size:12px;color:var(--muted)}
+  .err{color:var(--err);font-size:13px;min-height:18px;margin-top:8px}
+  .note{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:9px;padding:8px 10px;font-size:12.5px;color:var(--warn-ink);margin-top:10px}
+
+  /* ---------- Layout ---------- */
+  .layout{max-width:1500px;margin:0 auto;padding:16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+  .preview-col{position:sticky;top:calc(var(--topH) + 12px);max-height:calc(100vh - var(--topH) - 24px);overflow:auto;border-radius:var(--radius)}
+  .ptitle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px}
+  .ptitle .spacer{flex:1}
+  @media (max-width:1100px){
+    .layout{grid-template-columns:minmax(0,1fr);max-width:640px}
+    .preview-col{position:static;max-height:none}
+  }
+  @media (min-width:1101px){ .layout{padding-top:16px} }
+
+  /* ---------- Form ---------- */
+  details.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow);scroll-margin-top:calc(var(--topH) + 60px)}
+  details.card>summary{list-style:none;cursor:pointer;padding:13px 16px;font-weight:650;display:flex;align-items:center;gap:10px;user-select:none}
+  details.card>summary:hover{background:var(--panel-2)}
+  details.card>summary::-webkit-details-marker{display:none}
+  details.card>summary .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent-weak);color:var(--accent);font-size:12px;font-weight:700;flex:none}
+  details.card.done>summary .n{background:var(--accent);color:var(--accent-ink)}
+  details.card>summary .chev{margin-left:auto;color:var(--muted);transition:transform .15s}
+  details.card[open]>summary .chev{transform:rotate(90deg)}
+  details.card>summary .sum{font-weight:400;color:var(--muted);font-size:12px;margin-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1 1 auto}
+  .body{padding:4px 16px 16px;border-top:1px solid var(--line)}
+  .g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:12px}
+  .g .w2{grid-column:span 2}
+  @media (max-width:520px){.g .w2{grid-column:auto}}
+  label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--ink-2);font-weight:600}
+  input[type=text],input[type=date],input[type=time],input[type=number],input[type=password],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--field);font-size:14px;font-weight:400;min-height:38px}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
+  input::placeholder,textarea::placeholder{color:var(--muted);opacity:.8}
+  textarea{min-height:70px;resize:vertical;line-height:1.45}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  .sub{margin:16px 0 2px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+  .pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .pills label{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid var(--line-2);border-radius:999px;font-size:13px;cursor:pointer;background:var(--field);transition:background .1s,border-color .1s}
+  .pills label:hover{border-color:var(--accent-line)}
+  .pills label:has(input:checked){background:var(--accent-weak);border-color:var(--accent);color:var(--ink);font-weight:600}
+  .pills input{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
+  .pills label::before{content:"";width:12px;height:12px;border-radius:50%;border:1.5px solid var(--line-2);flex:none}
+  .pills label:has(input:checked)::before{content:"✓";border:0;width:12px;height:12px;font-size:11px;line-height:12px;color:var(--accent);font-weight:800}
+  .pills label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+
+  /* segmented buttons that replace short dropdowns */
+  .seg-src{display:none!important}
+  .g .segf{grid-column:span 2}
+  @media (max-width:520px){ .g .segf{grid-column:1/-1} }
+  .seg{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;border:1px solid var(--line-2);border-radius:9px;overflow:hidden;background:var(--field);width:fit-content;max-width:100%}
+  .seg button{flex:none;border:0;border-right:1px solid var(--line);background:transparent;padding:7px 12px;min-height:36px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--ink-2)}
+  .seg button:last-child{border-right:0}
+  .seg button:hover{background:var(--accent-soft)}
+  .seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);font-weight:650}
+
+  /* "Normal" switch */
+  .normal{display:inline-flex;align-items:center;gap:10px;margin-top:12px;padding:8px 14px 8px 10px;border-radius:999px;background:var(--accent-soft);border:1px solid var(--accent-line);font-weight:600;cursor:pointer;width:fit-content}
+  .normal input{appearance:none;-webkit-appearance:none;width:34px;height:20px;border-radius:999px;background:var(--line-2);position:relative;margin:0;cursor:pointer;transition:background .15s;flex:none}
+  .normal input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+  .normal input:checked{background:var(--accent)}
+  .normal input:checked::after{transform:translateX(14px)}
+  .check{display:flex;align-items:center;gap:8px;font-size:13px;margin-top:10px;cursor:pointer}
+  .check input{accent-color:var(--accent);width:16px;height:16px}
+  .inline-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+  .imgs figure{margin:0;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--field)}
+  .imgs img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+  .imgs figcaption{display:flex;gap:4px;padding:6px}
+  .imgs figcaption input{padding:5px 7px;font-size:12px;min-height:30px}
+  .imgs figcaption button{border:1px solid var(--line);background:var(--field);border-radius:6px;cursor:pointer;padding:0 8px}
+  .drop{border:2px dashed var(--line-2);border-radius:10px;padding:18px;text-align:center;color:var(--muted);cursor:pointer;margin-top:10px}
+  .drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+  [hidden]{display:none!important}
+
+  /* ---------- iPad / prekje ---------- */
+  html{-webkit-text-size-adjust:100%}
+  body{-webkit-tap-highlight-color:transparent}
+  .top .in{padding-top:max(10px,env(safe-area-inset-top));padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+  .layout{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));padding-bottom:max(24px,env(safe-area-inset-bottom))}
+  @media (pointer:coarse){
+    .btn{min-height:44px;padding:10px 14px}
+    .btn.sm{min-height:38px;padding:8px 12px;font-size:13px}
+    .seg button{min-height:44px;padding:8px 15px;font-size:15px}
+    .pills label{padding:10px 14px;font-size:14.5px}
+    .pills{gap:8px}
+    input[type=text],input[type=date],input[type=time],input[type=number],input[type=password],select,textarea{font-size:16px;min-height:44px}
+    details.card>summary{padding:15px 16px}
+    .snav a{padding:8px 12px 8px 8px;font-size:14px}
+    .normal{padding:10px 16px 10px 12px}
+    .check input{width:20px;height:20px}
+    .alist li{padding:12px 14px}
+    #saved{font-size:12.5px}
+  }
+
+  /* ---------- Kolonoskopi / klinika ---------- */
+  .bbps{font-weight:600;text-transform:none;letter-spacing:0;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line)}
+  .bbps.ok{background:var(--accent-weak);border-color:var(--accent);color:var(--ink)}
+  .bbps.bad{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn-ink)}
+  .polyps{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .prow{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;padding:10px 10px 10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2)}
+  .prow .pn{flex:none;align-self:center;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:12px}
+  .prow label{flex:1 1 110px}
+  .prow label.sm{flex:0 1 80px}
+  .prow .prm{flex:none;border:1px solid var(--line-2);background:var(--field);border-radius:8px;min-width:38px;min-height:38px;cursor:pointer;color:var(--muted)}
+  .logo-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .logo-box{width:150px;height:84px;border:2px dashed var(--line-2);border-radius:10px;display:grid;place-items:center;background:#fff;cursor:pointer;overflow:hidden;color:#94a3b8;font-size:12px;text-align:center;padding:6px}
+  .logo-box img{max-width:100%;max-height:100%;object-fit:contain}
+  .logo-box.over{border-color:var(--accent)}
+  #report .rh{cursor:pointer;border-radius:4px}
+  #report .rh:hover{outline:2px dashed var(--accent-line);outline-offset:6px}
+  .rh-add{border:1.5px dashed #94a3b8;background:#f8fafc;color:#475569;border-radius:8px;padding:10px 14px;font:600 10pt system-ui,sans-serif;cursor:pointer}
+  .rgrp{margin:14px 0 2px;padding:3px 8px;background:#0f766e;color:#fff;font-weight:700;font-size:9.5pt;letter-spacing:.6px;text-transform:uppercase;border-radius:3px;break-after:avoid}
+
+  /* ---------- Report paper ---------- */
+  .paper{background:#fff;color:#111;width:100%;max-width:210mm;margin:0 auto;padding:14mm 14mm 12mm;box-shadow:0 10px 30px rgba(15,23,42,.12);border-radius:4px;font:10.5pt/1.45 "Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .rh{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:2px solid #0f766e;padding-bottom:8px}
+  .rh-l{display:flex;gap:10px;align-items:center}
+  .rh-l img{max-height:58px;max-width:170px;object-fit:contain}
+  .clinic{font-weight:700;font-size:12.5pt}
+  .addr{font-size:8.5pt;color:#555;white-space:pre-line}
+  .rh-r{text-align:right}
+  .doc-t{font-weight:700;font-size:12pt;color:#0f766e;text-transform:uppercase;letter-spacing:.3px}
+  .doc-s{font-size:9pt;color:#555}
+  table.meta{width:100%;border-collapse:collapse;margin:10px 0 6px;font-size:9.5pt}
+  table.meta td{padding:3px 6px;border:1px solid #e5e7eb;vertical-align:top}
+  table.meta td.k{color:#555;width:17%;background:#f8fafc;white-space:nowrap}
+  .rs{margin-top:9px;break-inside:avoid}
+  .rs h4,.concl h4{margin:0 0 2px;font-size:9.5pt;text-transform:uppercase;letter-spacing:.4px;color:#0f766e}
+  .rs p{margin:0;white-space:pre-line}
+  .empty{color:#9ca3af;font-style:italic}
+  .concl{margin-top:12px;padding:8px 12px;border-left:4px solid #0f766e;background:#f0fdfa;break-inside:avoid}
+  .concl ol{margin:2px 0 0;padding-left:20px;font-weight:600}
+  .rimgs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px}
+  .rimgs figure{margin:0;break-inside:avoid}
+  .rimgs img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:3px;display:block}
+  .rimgs figcaption{font-size:8pt;color:#444;text-align:center;margin-top:2px}
+  .recs{margin:2px 0 0;padding-left:18px}
+  .sig{display:flex;justify-content:flex-end;margin-top:26px;break-inside:avoid}
+  .sig div{min-width:220px;text-align:center;font-size:9.5pt}
+  .sig .ln{border-top:1px solid #333;margin-top:34px;padding-top:4px}
+  .foot{margin-top:14px;font-size:8pt;color:#888;text-align:center}
+
+  /* ---------- Print: only the report ---------- */
+  @page{size:A4;margin:12mm}
+  @media print{
+    body{background:#fff}
+    .top,.form-col,.no-print,.mtabs,.ptitle{display:none!important}
+    body.view-report .preview-col,body .preview-col{display:block!important}
+    .layout{display:block;padding:0;max-width:none}
+    .preview-col{position:static;max-height:none;overflow:visible}
+    .paper{box-shadow:none;border-radius:0;padding:0;max-width:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="top no-print" id="top">
+  <div class="in">
+    <span class="brand" title="Funksionon offline – asgjë nuk dërgohet në internet"><span class="logo">🩺</span><span class="txt">Raport Endoskopie</span></span>
+    <span class="status"><span id="saved"></span><span class="bk" id="bk" title="Kliko për backup"></span></span>
+    <span class="spacer"></span>
+    <button class="btn" id="b-arch" title="Arkivi i pacientëve"><span class="ic">📁</span><span class="lbl">Arkivi</span> <span id="archN"></span></button>
+    <button class="btn" id="b-normal" title="Plotëso të gjitha seksionet si normale"><span class="ic">✓</span><span class="lbl">Gjetje normale</span></button>
+    <button class="btn" id="b-new" title="Pacient i ri – raporti aktual mbetet në arkiv"><span class="ic">＋</span><span class="lbl">Pacient i ri</span></button>
+    <button class="btn" id="b-clinic" title="Logo, emri i klinikës dhe skedarët"><span class="ic">⚙</span><span class="lbl">Klinika</span></button>
+    <button class="btn" id="b-theme" title="Ndrysho temën (automatike / e çelët / e errët)"><span class="ic" id="themeIc">◐</span></button>
+    <button class="btn primary" id="b-print" title="Printo / ruaj si PDF (Ctrl+P)"><span class="ic">🖨</span><span class="lbl2">Printo / PDF</span></button>
+  </div>
+</div>
+
+<div class="mtabs no-print" role="tablist">
+  <button type="button" role="tab" data-view="form" aria-selected="true">✎ Formulari</button>
+  <button type="button" role="tab" data-view="report" aria-selected="false">📄 Raporti</button>
+</div>
+
+<div class="layout">
+<div class="form-col">
+<nav class="snav no-print" id="snav" aria-label="Seksionet"></nav>
+<form id="form" autocomplete="off" onsubmit="return false">
+
+  <details class="card" open>
+    <summary><span class="n">1</span>Pacienti dhe procedura<span class="sum" data-sum="pt"></span><span class="chev">›</span></summary>
+    <div class="body">
+      <div class="g">
+        <label class="f w2">Procedura<select name="proc"><option value="gastroskopi">Gastroskopi</option><option value="kolonoskopi">Kolonoskopi</option><option value="te_dyja">Gastroskopi + Kolonoskopi</option></select></label>
+      </div>
+      <div class="g">
+        <label class="f w2">Emri dhe mbiemri *<input type="text" name="pt_name" placeholder="p.sh. Ardit Hoxha"></label>
+        <label class="f">Datëlindja<input type="date" name="pt_dob"></label>
+        <label class="f">Gjinia<select name="pt_sex"><option value="">—</option><option>Mashkull</option><option>Femër</option></select></label>
+        <label class="f">Nr. i dosjes<input type="text" name="pt_id"></label>
+        <label class="f w2">Referuar nga<input type="text" name="referrer" placeholder="p.sh. Dr. … / QKMF …"></label>
+      </div>
+      <div class="g">
+        <label class="f">Data e procedurës *<input type="date" name="date"></label>
+        <label class="f">Ora<input type="time" name="time"></label>
+        <label class="f">Mjeku endoskopist<input type="text" name="endo"></label>
+        <label class="f">Asistenti/ja<input type="text" name="assistant"></label>
+        <label class="f">Aparati<input type="text" name="scope" placeholder="p.sh. GIF-H190 / CF-H190L"></label>
+        <label class="f">ASA<select name="asa"><option value="">—</option><option>I</option><option>II</option><option>III</option><option>IV</option></select></label>
+      </div>
+      <div data-show="egd"><div class="sub">Indikacioni – gastroskopi</div>
+      <div class="pills" data-pills="ind"></div></div>
+      <div data-show="colo"><div class="sub">Indikacioni – kolonoskopi</div>
+      <div class="pills" data-pills="ind_c"></div></div>
+      <div class="g"><label class="f w2">Tjetër<input type="text" name="ind_free" placeholder="p.sh. histori familjare për karcinomë gastrike"></label></div>
+      <label class="check"><input type="checkbox" name="consent"> Pëlqimi i informuar u mor me shkrim</label>
+    </div>
+  </details>
+
+  <details class="card">
+    <summary><span class="n">2</span>Sedacioni dhe toleranca<span class="sum" data-sum="sed"></span><span class="chev">›</span></summary>
+    <div class="body">
+      <div class="g">
+        <label class="f w2">Lloji<select name="sed_type">
+          <option value="">—</option>
+          <option>pa sedacion</option>
+          <option>anestezi lokale e faringut (lidokainë spraj)</option>
+          <option>sedacion i ndërgjegjshëm</option>
+          <option>sedacion i thellë me propofol</option>
+          <option>anestezi e përgjithshme</option>
+        </select></label>
+        <label class="f">Propofol (mg)<input type="number" name="propofol" min="0" step="10"></label>
+        <label class="f">Midazolam (mg)<input type="number" name="midazolam" min="0" step="0.5"></label>
+        <label class="f">Fentanil (µg)<input type="number" name="fentanyl" min="0" step="25"></label>
+        <label class="f">O₂ (l/min)<input type="number" name="o2" min="0" step="1"></label>
+        <label class="f w2">Tjetër<input type="text" name="sed_other" placeholder="p.sh. butilskopolaminë 20 mg i.v."></label>
+        <label class="f">Monitorimi<select name="monitor"><option value="">—</option><option>SpO₂, TA, EKG</option><option>SpO₂, TA</option><option>SpO₂</option></select></label>
+        <label class="f">Toleranca<select name="tolerance"><option value="">—</option><option>e mirë</option><option>e pranueshme</option><option>e dobët</option></select></label>
+      </div>
+    </div>
+  </details>
+
+  <details class="card" open data-show="egd">
+    <summary><span class="n">3</span>Ezofagu<span class="sum" data-sum="e"></span><span class="chev">›</span></summary>
+    <div class="body">
+      <label class="normal"><input type="checkbox" name="e_normal" data-hides="e_det"> Ezofag normal</label>
+      <div class="g">
+        <label class="f">Linja Z (cm nga harqet dentare)<input type="number" name="zline" min="15" max="50"></label>
+      </div>
+      <div id="e_det">
+        <div class="g">
+          <label class="f">Ezofagit refluksi (LA)<select name="la">
+            <option value="">asnjë</option>
+            <option value="A">A – lezione ≤5 mm</option>
+            <option value="B">B – lezione &gt;5 mm, pa u bashkuar</option>
+            <option value="C">C – të bashkuara, &lt;75% e perimetrit</option>
+            <option value="D">D – ≥75% e perimetrit</option>
+          </select></label>
+          <label class="f">Hernie hiatale<select name="hh"><option value="">jo</option><option value="po">po</option></select></label>
+          <label class="f">Gjatësia e hernies (cm)<input type="number" name="hh_cm" min="0" step="0.5"></label>
+          <label class="f">Barrett – Praga C (cm)<input type="number" name="bar_c" min="0" step="1"></label>
+          <label class="f">Barrett – Praga M (cm)<input type="number" name="bar_m" min="0" step="1"></label>
+          <label class="f">Varice ezofageale<select name="var">
+            <option value="">jo</option>
+            <option value="F1">F1 – të vogla, të drejta</option>
+            <option value="F2">F2 – të zgjeruara, gjarpëruese, &lt;⅓ e lumenit</option>
+            <option value="F3">F3 – të mëdha, &gt;⅓ e lumenit</option>
+          </select></label>
+        </div>
+        <label class="check"><input type="checkbox" name="var_red"> Varice me shenja të kuqe (red wale / cherry-red spots)</label>
+        <div class="sub">Gjetje të tjera</div>
+        <div class="pills" data-pills="e_other"></div>
+      </div>
+      <div class="g"><label class="f w2">Përshkrim shtesë<textarea name="e_free" placeholder="p.sh. erozione lineare në 36–38 cm …"></textarea></label></div>
+    </div>
+  </details>
+
+  <details class="card" open data-show="egd">
+    <summary><span class="n">4</span>Stomaku<span class="sum" data-sum="s"></span><span class="chev">›</span></summary>
+    <div class="body">
+      <label class="normal"><input type="checkbox" name="s_normal" data-hides="s_det"> Stomak normal</label>
+      <div class="g">
+        <label class="f">Retrofleksioni<select name="retro"><option value="">—</option><option>u krye</option><option>nuk u krye</option></select></label>
+        <label class="f">Valvula GE (Hill)<select name="hill"><option value="">—</option><option>I</option><option>II</option><option>III</option><option>IV</option></select></label>
+      </div>
+      <div id="s_det">
+        <div class="g">
+          <label class="f">Përmbajtja<select name="s_content"><option value="">lëng i pastër</option><option>mbetje ushqimore</option><option>biliare</option><option>hematinë</option><option>gjak i freskët</option></select></label>
+          <label class="f w2">Gastropatia<select name="gastro">
+            <option value="">asnjë</option>
+            <option>eritematoze e antrumit</option>
+            <option>eritematoze pangastrike</option>
+            <option>erozive e antrumit</option>
+            <option>erozive pangastrike</option>
+            <option>nodulare e antrumit</option>
+            <option>atrofike (dyshim)</option>
+          </select></label>
+        </div>
+        <div class="sub">Ulçera gastrike</div>
+        <div class="g">
+          <label class="f">Lokalizimi<select name="s_ul_loc"><option value="">asnjë ulçerë</option><option>kardia</option><option>fundus</option><option>korpus</option><option>angulus</option><option>antrum</option><option>regjioni prepilorik</option></select></label>
+          <label class="f">Madhësia (mm)<input type="number" name="s_ul_mm" min="0"></label>
+          <label class="f w2">Forrest<select name="s_ul_f" data-forrest></select></label>
+        </div>
+        <div class="sub">Polipe</div>
+        <div class="g">
+          <label class="f">Numri<input type="number" name="pol_n" min="0"></label>
+          <label class="f">Madhësia max (mm)<input type="number" name="pol_mm" min="0"></label>
+          <label class="f">Lokalizimi<select name="pol_loc"><option value="">—</option><option>fundus</option><option>korpus</option><option>angulus</option><option>antrum</option></select></label>
+          <label class="f">Paris<select name="pol_paris">
+            <option value="">—</option>
+            <option value="0-Ip">0-Ip – me kërcell</option>
+            <option value="0-Is">0-Is – sesil</option>
+            <option value="0-IIa">0-IIa – pak i ngritur</option>
+            <option value="0-IIb">0-IIb – i sheshtë</option>
+            <option value="0-IIc">0-IIc – pak i zhytur</option>
+          </select></label>
+        </div>
+        <div class="sub">Gjetje të tjera</div>
+        <div class="pills" data-pills="s_other"></div>
+      </div>
+      <div class="g"><label class="f w2">Përshkrim shtesë<textarea name="s_free"></textarea></label></div>
+    </div>
+  </details>
+
+  <details class="card" open data-show="egd">
+    <summary><span class="n">5</span>Duodeni<span class="sum" data-sum="d"></span><span class="chev">›</span></summary>
+    <div class="body">
+      <label class="normal"><input type="checkbox" name="d_normal" data-hides="d_det"> Duoden normal</label>
+      <div class="g">
+        <label class="f">Ekzaminimi deri në<select name="extent"><option value="D2">D2</option><option value="D3">D3</option><option value="bulb">bulbin duodenal</option><option value="pilor">pilor (nuk u kalua)</option></select></label>
+      </div>
+      <div id="d_det">
+        <div class="g">
+          <label class="f">Bulbi<select name="bulb"><option value="">pa veçori</option><option>bulbit eritematoz</option><option>bulbit eroziv</option><option>bulb i deformuar (cikatricial)</option></select></label>
+        </div>
+        <div class="sub">Ulçera duodenale</div>
+        <div class="g">
+          <label class="f">Lokalizimi<select name="d_ul_loc"><option value="">asnjë ulçerë</option><option>muri i përparmë i bulbit</option><option>muri i pasmë i bulbit</option><option>postbulbare</option></select></label>
+          <label class="f">Madhësia (mm)<input type="number" name="d_ul_mm" min="0"></label>
+          <label class="f w2">Forrest<select name="d_ul_f" data-forrest></select></label>
+        </div>
+        <div class="sub">Gjetje të tjera</div>
+        <div class="pills" data-pills="d_other"></div>
+      </div>
+      <div class="g"><label class="f w2">Përshkrim shtesë<textarea name="d_free"></textarea></label></div>
+    </div>
+  </details>
+
+  <details class="card" open data-show="colo">
+    <summary><span class="n">6</span>Kolonoskopia – përgatitja dhe cilësia<span class="sum" data-sum="cq"></span><span class="chev">›</span></summary>
+    <div class="body">
+      <div class="g">
+        <label class="f w2">Përgatitja e zorrës<select name="c_prep"><option value="">—</option><option>PEG 4 L</option><option>PEG 2 L + askorbat</option><option>pikosulfat natriumi + citrat magnezi</option><option>tjetër</option></select></label>
+      </div>
+      <label class="check"><input type="checkbox" name="c_prep_split"> Doza e ndarë (split-dose)</label>
+      <div class="sub">Shkalla e Bostonit (BBPS) <span class="bbps" id="bbps"></span></div>
+      <div class="g">
+        <label class="f">Kolon i djathtë<select name="c_bb_r"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option></select></label>
+        <label class="f">Transvers<select name="c_bb_t"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option></select></label>
+        <label class="f">Kolon i majtë<select name="c_bb_l"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option></select></label>
+      </div>
+      <div class="hint">0 = mukoza nuk duket · 1 = pjesërisht · 2 = mirë me mbetje të vogla · 3 = plotësisht e pastër. E përshtatshme: totali ≥ 6 dhe çdo segment ≥ 2.</div>
+      <div class="g">
+        <label class="f">Arritur deri në<select name="c_reach"><option value="">—</option><option value="ileum">ileumi terminal</option><option value="cekum">cekum</option><option value="ascendent">kolon ascendent</option><option value="fleksura hepatike">fleksura hepatike</option><option value="transvers">kolon transvers</option><option value="fleksura lienale">fleksura lienale</option><option value="descendent">kolon descendent</option><option value="sigmë">sigmë</option><option value="rektum">rektum</option></select></label>
+        <label class="f w2">Nëse jo e plotë – arsyeja<select name="c_incomplete"><option value="">—</option><option>përgatitje e pamjaftueshme</option><option>strikturë / masë obstruktive</option><option>angulim / ansë e fiksuar</option><option>tolerancë e dobët</option><option>tjetër</option></select></label>
+        <label class="f">Koha e tërheqjes (min)<input type="number" name="c_wt" min="0" step="1"></label>
+        <label class="f">Retrofleksion në rektum<select name="c_retro"><option value="">—</option><option>u krye</option><option>nuk u krye</option></select></label>
+      </div>
+      <div class="sub">Pikat e referimit të identifikuara / fotografuara</div>
+      <div class="pills" data-pills="c_land"></div>
+      <label class="check"><input type="checkbox" name="c_co2"> Insuflim me CO₂</label>
+    </div>
+  </details>
+
+  <details class="card" open data-show="colo">
+    <summary><span class="n">7</span>Koloni – gjetjet<span class="sum" data-sum="c"></span><span class="chev">›</span></summary>
+    <div class="body">
+      <label class="normal"><input type="checkbox" name="c_normal" data-hides="c_det"> Kolon dhe rektum normal</label>
+      <div id="c_det">
+        <div class="sub">Polipe</div>
+        <input type="hidden" name="c_polyps">
+        <div id="polyps" class="polyps"></div>
+        <div class="inline-actions"><button type="button" class="btn light sm" id="b-addpol">＋ Shto polip</button></div>
+        <div class="g">
+          <label class="f">Divertikulozë<select name="c_div"><option value="">jo</option><option>e sigmës</option><option>e kolonit të majtë</option><option>e përhapur</option></select></label>
+          <label class="f">Hemoroide të brendshme<select name="c_hem"><option value="">jo</option><option>I</option><option>II</option><option>III</option><option>IV</option></select></label>
+        </div>
+        <div class="sub">Inflamacion</div>
+        <div class="g">
+          <label class="f w2">Kolit<select name="c_colitis"><option value="">asnjë</option><option>kolit ulceroz</option><option>sëmundje Crohn</option><option>kolit jo specifik</option><option>kolit iskemik (dyshim)</option><option>kolit infektiv (dyshim)</option></select></label>
+          <label class="f">Mayo (aktiviteti)<select name="c_mayo"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option></select></label>
+          <label class="f w2">Shtrirja<select name="c_col_ext"><option value="">—</option><option>proktit (E1)</option><option>kolit i majtë (E2)</option><option>pankolit (E3)</option><option>segmentare</option></select></label>
+        </div>
+        <div class="sub">Gjetje të tjera</div>
+        <div class="pills" data-pills="c_other"></div>
+      </div>
+      <div class="g"><label class="f w2">Përshkrim shtesë<textarea name="c_free" placeholder="p.sh. masë ulceruese në 25 cm nga linja anale, gjysmë-cirkulare …"></textarea></label></div>
+      <div class="sub">Biopsi në kolon</div>
+      <div class="pills" data-pills="c_bx"></div>
+      <label class="check"><input type="checkbox" name="c_tattoo"> Tatuazh me bojë endoskopike</label>
+      <div class="g"><label class="f w2">Detaje<input type="text" name="c_bx_free" placeholder="p.sh. 2× nga secili segment për kolit mikroskopik"></label></div>
+    </div>
+  </details>
+
+  <details class="card">
+    <summary><span class="n">6</span>Biopsi, ndërhyrje, komplikime<span class="sum" data-sum="bx"></span><span class="chev">›</span></summary>
+    <div class="body">
+      <div data-show="egd">
+      <div class="sub">Biopsi në stomak – protokolli Sydney</div>
+      <div class="pills" data-pills="sydney"></div>
+      <div class="hint">A1/A2: antrum (kurvatura e vogël/e madhe) · IA: angulus · B1/B2: korpus (kurvatura e vogël/e madhe)</div>
+      <div class="g">
+        <label class="f w2">Biopsi të tjera<input type="text" name="bx_other" placeholder="p.sh. 4× Barrett (Seattle), 4× D2 për celiaki"></label>
+        <label class="f">Testi H. pylori<select name="hp_test"><option value="">nuk u krye</option><option>test i shpejtë i ureazës</option><option>histologji</option></select></label>
+        <label class="f">Rezultati HP<select name="hp_res"><option value="">në pritje</option><option>pozitiv</option><option>negativ</option></select></label>
+      </div>
+      </div>
+      <div class="sub">Ndërhyrje terapeutike</div>
+      <div class="pills" data-pills="int"></div>
+      <div class="g"><label class="f w2">Detaje<input type="text" name="int_free" placeholder="p.sh. adrenalinë 1:10.000, 6 ml; 2 klipe"></label></div>
+      <div class="g">
+        <label class="f">Komplikime<select name="comp"><option>asnjë</option><option>gjakosje e vogël, e kontrolluar endoskopikisht</option><option>desaturim i përkohshëm</option><option>hipotension i përkohshëm</option><option>perforacion</option><option>tjetër</option></select></label>
+        <label class="f w2">Shënim<input type="text" name="comp_free"></label>
+      </div>
+    </div>
+  </details>
+
+  <details class="card">
+    <summary><span class="n">7</span>Fotodokumentimi<span class="sum" data-sum="img"></span><span class="chev">›</span></summary>
+    <div class="body">
+      <div class="drop" id="drop">Tërhiq fotot këtu ose <u>kliko për t'i zgjedhur</u><input type="file" id="imgIn" accept="image/*" multiple hidden></div>
+      <div class="imgs" id="imgs"></div>
+      <div class="hint">Fotot ruhen në arkiv bashkë me raportin dhe përfshihen në backup.</div>
+    </div>
+  </details>
+
+  <details class="card" open>
+    <summary><span class="n">8</span>Konkluzioni dhe rekomandimet<span class="chev">›</span></summary>
+    <div class="body">
+      <div class="inline-actions"><button type="button" class="btn sm" id="b-auto">⟳ Gjenero konkluzionin nga gjetjet</button></div>
+      <div class="g"><label class="f w2">Konkluzioni (një diagnozë për rresht)<textarea name="concl" rows="4"></textarea></label></div>
+      <div class="sub">Shto rekomandim</div>
+      <div class="inline-actions" id="recBtns"></div>
+      <div class="g"><label class="f w2">Rekomandimet (një për rresht)<textarea name="recs" rows="4"></textarea></label></div>
+    </div>
+  </details>
+</form>
+
+
+</div>
+
+<div class="preview-col">
+  <div class="ptitle"><span>Pamja e raportit · A4</span><span class="spacer"></span>
+    <button type="button" class="btn light sm" id="b-copy">Kopjo tekstin</button></div>
+  <div class="paper" id="report"></div>
+</div>
+</div>
+
+<dialog id="archDlg">
+  <div class="dh"><h2>📁 Arkivi i pacientëve</h2><span class="stat" id="archStat"></span><button class="x" data-close>×</button></div>
+  <div class="db">
+    <input type="text" id="archQ" placeholder="Kërko sipas emrit, nr. të dosjes, datës ose diagnozës …">
+    <ul class="alist" id="archList"></ul>
+  </div>
+  <div class="df">
+    <button class="btn" id="b-backup">⬇ Backup i plotë</button>
+    <button class="btn light" id="b-restore">⬆ Rikthe nga backup</button>
+    <span class="stat" id="bkInfo"></span>
+  </div>
+</dialog>
+
+<dialog id="pwDlg">
+  <form method="dialog" id="pwForm">
+    <div class="dh"><h2 id="pwTitle"></h2></div>
+    <div class="db">
+      <p id="pwText" style="margin:0 0 10px"></p>
+      <label class="check" id="pwEncRow"><input type="checkbox" id="pwEnc" checked> Enkripto me fjalëkalim (rekomandohet)</label>
+      <div class="g" id="pwFields">
+        <label class="f">Fjalëkalimi<input type="password" id="pw1" autocomplete="new-password"></label>
+        <label class="f" id="pw2Row">Përsërit fjalëkalimin<input type="password" id="pw2" autocomplete="new-password"></label>
+      </div>
+      <div class="note" id="pwNote">Nëse e harron fjalëkalimin, backup-i <b>nuk mund të hapet</b> nga askush. Ruaje në një vend të sigurt.</div>
+      <div class="err" id="pwErr"></div>
+    </div>
+    <div class="df"><button class="btn" value="ok" id="pwOk">Vazhdo</button><button class="btn light" value="cancel" formnovalidate>Anulo</button></div>
+  </form>
+</dialog>
+
+<dialog id="clinicDlg">
+  <div class="dh"><h2>⚙ Klinika</h2><span class="stat">Ruhet përgjithmonë në këtë pajisje</span><button class="x" data-close>×</button></div>
+  <div class="db">
+    <form id="clinic" autocomplete="off" onsubmit="return false">
+      <div class="sub" style="margin-top:0">Logoja e klinikës</div>
+      <div class="logo-row">
+        <div class="logo-box" id="logoBox" title="Kliko ose tërhiq një foto këtu"></div>
+        <div>
+          <div class="inline-actions" style="margin-top:0">
+            <button type="button" class="btn sm" id="b-logo">⬆ Ngarko logon</button>
+            <button type="button" class="btn light sm" id="b-logo-x">Hiq</button>
+          </div>
+          <div class="hint">PNG ose JPG. Del në krye të çdo raporti dhe në PDF.</div>
+        </div>
+        <input type="file" id="logoIn" accept="image/*" hidden>
+        <input type="hidden" name="c_logo">
+      </div>
+      <div class="g">
+        <label class="f w2">Emri i klinikës<input type="text" name="c_name" placeholder="p.sh. Klinika e Gastroenterologjisë"></label>
+        <label class="f w2">Adresa / tel. / email<textarea name="c_addr" rows="2"></textarea></label>
+        <label class="f">Mjeku (parazgjedhje)<input type="text" name="c_endo"></label>
+        <label class="f">Aparati (parazgjedhje)<input type="text" name="c_scope"></label>
+      </div>
+    </form>
+    <div class="sub">Skedarët</div>
+    <div class="inline-actions">
+      <button type="button" class="btn light sm" id="b-txt">Shkarko raportin si .txt</button>
+      <button type="button" class="btn light sm" id="b-json">Eksporto këtë pacient (.json)</button>
+      <button type="button" class="btn light sm" id="b-open">Importo pacient / backup</button>
+      <input type="file" id="jsonIn" accept="application/json,.json" hidden>
+    </div>
+  </div>
+  <div class="df"><span class="spacer" style="flex:1"></span><button class="btn" data-close>Gati</button></div>
+</dialog>
+
+<dialog id="saveDlg">
+  <div class="dh"><h2>Ruaj skedarin</h2><button class="x" data-close>×</button></div>
+  <div class="db">
+    <p style="margin:0 0 6px"><b id="saveName"></b></p>
+    <p class="stat" style="margin:0">Shtyp “Ruaj”, pastaj zgjidh <b>“Save to Files” → iCloud Drive</b>.</p>
+  </div>
+  <div class="df"><button class="btn" id="saveGo">⬆ Ruaj / Ndaj</button><button class="btn light" data-close>Mbyll</button></div>
+</dialog>
+
+<script>
+/* ================= Listat ================= */
+const PILLS = {
+  ind: ["Dispepsi","Simptoma refluksi","Disfagi","Dhimbje epigastrike","Nauze / të vjella",
+        "Hemorragji GI e sipërme","Anemi nga mungesa e hekurit","Humbje peshe",
+        "Kontroll i ezofagut Barrett","Kontroll i ulçerës","Skrining për varice","Dyshim për celiaki"],
+  e_other: ["kandidozë","ezofagit eozinofilik (dyshim)","strikturë peptike","unazë Schatzki",
+            "lezion Mallory-Weiss","divertikul","masë / tumor"],
+  s_other: ["gastropati portal-hipertensive","GAVE","metaplazi intestinale (dyshim)",
+            "lezion subepitelial","masë / tumor","ksantelazmë"],
+  d_other: ["atrofi vilore (dyshim për celiaki)","duodenit postbulbar","divertikul periampular",
+            "papila major pa veçori","masë / tumor"],
+  sydney: ["A1","A2","IA","B1","B2"],
+  ind_c: ["Skrining për kancer kolorektal","Test FIT / gjak okult pozitiv","Hematokezi","Ndryshim i ritmit të defekimit",
+          "Diarre kronike","Dhimbje abdominale","Anemi nga mungesa e hekurit","Kontroll pas polipektomisë",
+          "Kontroll pas kancerit kolorektal","Sëmundje inflamatore e zorrës – vlerësim","Histori familjare për KKR"],
+  c_land: ["orificiumi apendikular","valvula ileocekale","ileumi terminal"],
+  c_other: ["angiodisplazi","melanozë koli","lipomë","strikturë","masë / tumor (dyshim malinjiteti)",
+            "ileit terminal","fisurë anale","proktit nga rrezatimi"],
+  c_bx: ["ileumi terminal","kolon i djathtë","kolon i majtë","rektum","nga lezioni"],
+  int: ["polipektomi me ansë","injektim adrenaline","klip hemostatik","koagulim me argon-plazmë (APC)",
+        "ligaturë varicesh","dilatim me balonë","heqje trupi të huaj","hemostazë e arritur"]
+};
+const FORREST = {
+  "Ia":"gjakosje aktive në rrymë","Ib":"gjakosje aktive me pikim","IIa":"enë e dukshme jo-gjakosëse",
+  "IIb":"koagul aderent","IIc":"njollë hematine e sheshtë","III":"bazë e pastër me fibrinë"
+};
+const RECS = [
+  { k:"all",  t:"Në pritje të rezultatit histopatologjik." },
+  { k:"egd",  t:"IPP (p.sh. pantoprazol 40 mg) 1× në ditë para mëngjesit, për 8 javë." },
+  { k:"egd",  t:"Terapi eradikuese për H. pylori nëse rezultati është pozitiv." },
+  { k:"egd",  t:"Kontroll endoskopik pas 8–12 javësh." },
+  { k:"egd",  t:"Mos hani dhe mos pini për 1 orë pas anestezisë lokale." },
+  { k:"colo", t:"Intervali i kolonoskopisë së kontrollit caktohet sipas rezultatit histologjik (ESGE 2020)." },
+  { k:"colo", t:"Kolonoskopi kontrolli pas 10 vjetësh (skrining, pa gjetje)." },
+  { k:"colo", t:"Përsëritje e kolonoskopisë me përgatitje më të mirë (dietë pa fibra 2 ditë, doza e ndarë)." },
+  { k:"colo", t:"Lajmëroni menjëherë në rast gjakderdhjeje, dhimbjeje të fortë barku ose temperature." },
+  { k:"all",  t:"Mos drejtoni automjet për 24 orë pas sedacionit." },
+  { k:"all",  t:"Kontroll te mjeku referues me rezultatet." }
+];
+const PROC_TITLE = { gastroskopi:"Ezofagogastroduodenoskopi", kolonoskopi:"Kolonoskopi", te_dyja:"Gastroskopi dhe kolonoskopi" };
+const REACH = { ileum:"ileumin terminal", cekum:"cekum", ascendent:"kolonin ascendent", "fleksura hepatike":"fleksurën hepatike",
+  transvers:"kolonin transvers", "fleksura lienale":"fleksurën lienale", descendent:"kolonin descendent", "sigmë":"sigmë", rektum:"rektum" };
+const POL_LOC = ["cekum","kolon ascendent","fleksura hepatike","kolon transvers","fleksura lienale","kolon descendent","sigmë","rektum"];
+const POL_PARIS = ["0-Ip","0-Isp","0-Is","0-IIa","0-IIb","0-IIc","LST-G","LST-NG"];
+const POL_REM = { "pincë e ftohtë":"polipektomi me pincë të ftohtë", "ansë e ftohtë":"polipektomi me ansë të ftohtë",
+  "ansë e nxehtë":"polipektomi me ansë të nxehtë", "EMR":"rezeksion endoskopik mukozal (EMR)",
+  "EMR pjesë-pjesë":"EMR pjesë-pjesë (piecemeal)", "nuk u hoq":"nuk u hoq – vetëm biopsi" };
+
+/* ================= Ndihmës ================= */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const cap = s => s ? s[0].toUpperCase() + s.slice(1) : s;
+const dot = s => s && !/[.!?]$/.test(s.trim()) ? s.trim() + "." : (s||"").trim();
+const today = () => new Date().toISOString().slice(0,10);
+const fmtDate = iso => { if(!iso) return ""; const [y,m,d] = iso.split("-"); return `${d}.${m}.${y}`; };
+function age(dob, at){
+  if(!dob) return "";
+  const b = new Date(dob), a = at ? new Date(at) : new Date();
+  let y = a.getFullYear() - b.getFullYear();
+  if(a.getMonth() < b.getMonth() || (a.getMonth() === b.getMonth() && a.getDate() < b.getDate())) y--;
+  return y >= 0 ? y : "";
+}
+const store = {
+  get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
+  del(k){ try { localStorage.removeItem(k); } catch {} }
+};
+const K_DRAFT = "gastro_sq_v2_draft", K_CLINIC = "gastro_sq_v2_clinic";
+
+/* ================= Ndërtimi i UI ================= */
+$$("[data-pills]").forEach(box => {
+  const name = box.dataset.pills;
+  box.innerHTML = PILLS[name].map(v =>
+    `<label><input type="checkbox" name="${name}" value="${esc(v)}" data-group> ${esc(v)}</label>`).join("");
+});
+$$("select[data-forrest]").forEach(sel => {
+  sel.innerHTML = `<option value="">—</option>` +
+    Object.entries(FORREST).map(([k,v]) => `<option value="${k}">${k} – ${v}</option>`).join("");
+});
+$("#recBtns").innerHTML = RECS.map((r,i) =>
+  `<button type="button" class="btn light sm" data-rec="${i}" ${r.k === "all" ? "" : `data-show="${r.k}"`} title="${esc(r.t)}">+ ${esc(r.t.length > 38 ? r.t.slice(0,36) + "…" : r.t)}</button>`).join("");
+
+const form = $("#form"), clinicForm = $("#clinic");
+let imgs = [];   // [{src, cap}]
+
+/* ================= Gjendja (lexim / shkrim) ================= */
+function readForm(root){
+  const s = {};
+  $$("[name]", root).forEach(el => {
+    const n = el.name;
+    if(el.type === "checkbox"){
+      if(el.hasAttribute("data-group")){ (s[n] ||= []); if(el.checked) s[n].push(el.value); }
+      else s[n] = el.checked;
+    } else if(el.type !== "file") s[n] = el.value.trim();
+  });
+  return s;
+}
+function writeForm(root, s){
+  $$("[name]", root).forEach(el => {
+    const v = s[el.name];
+    if(el.type === "checkbox") el.checked = el.hasAttribute("data-group") ? Array.isArray(v) && v.includes(el.value) : !!v;
+    else if(el.type !== "file"){
+      if(el.tagName === "SELECT") el.value = v ?? el.options[0].value;
+      else el.value = v ?? "";
+    }
+  });
+}
+function procFlags(p){
+  p = p || form.elements.proc.value;
+  return { egd: p !== "kolonoskopi", colo: p !== "gastroskopi" };
+}
+function syncToggles(){
+  $$("[data-hides]").forEach(cb => { $("#" + cb.dataset.hides).hidden = cb.checked; });
+  const f = procFlags();
+  $$("[data-show]").forEach(el => { el.hidden = !f[el.dataset.show]; });
+}
+
+/* ================= Butonat e segmentuar ================= */
+const SEGS = ["proc","c_bb_r","c_bb_t","c_bb_l","c_retro","c_div","c_hem","c_mayo","pt_sex","asa","la","hh","var","retro","hill","s_ul_f","d_ul_f","pol_paris","extent","tolerance","hp_res"];
+SEGS.forEach(n => {
+  const sel = form.elements[n]; if(!sel) return;
+  sel.classList.add("seg-src");
+  const box = document.createElement("div");
+  box.className = "seg"; box.dataset.for = n; box.setAttribute("role", "group");
+  [...sel.options].forEach(o => {
+    if(!o.value && o.text.trim() === "—") return;            // "—" = pa zgjedhje → klik i dytë e çaktivizon
+    const b = document.createElement("button");
+    b.type = "button"; b.dataset.v = o.value; b.title = o.text;
+    b.textContent = o.value && o.value.length <= 5 ? o.value : o.text;
+    box.appendChild(b);
+  });
+  sel.after(box);
+  if(box.children.length > 3 || box.textContent.length > 16) sel.closest("label").classList.add("segf");
+});
+form.addEventListener("click", e => {
+  const b = e.target.closest(".seg button"); if(!b) return;
+  e.preventDefault();
+  const sel = form.elements[b.parentElement.dataset.for];
+  const hasEmpty = [...sel.options].some(o => !o.value);
+  sel.value = (sel.value === b.dataset.v && hasEmpty) ? "" : b.dataset.v;
+  sel.dispatchEvent(new Event("change", { bubbles: true }));
+});
+function syncSegs(){
+  $$(".seg", form).forEach(box => {
+    const v = form.elements[box.dataset.for].value;
+    $$("button", box).forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v));
+  });
+}
+
+/* ================= Navigimi i seksioneve ================= */
+const SEC_KEYS = ["pt","sed","e","s","d","cq","c","bx","img","concl"];
+const cards = $$("#form > details.card");
+cards.forEach((c, i) => { c.id = "sec-" + SEC_KEYS[i]; c.dataset.key = SEC_KEYS[i]; });
+const SEC_NAMES = ["Pacienti","Sedacioni","Ezofagu","Stomaku","Duodeni","Përgatitja","Koloni","Biopsi","Foto","Konkluzioni"];
+$("#snav").innerHTML = cards.map((c, i) =>
+  `<a href="#${c.id}" data-k="${SEC_KEYS[i]}"><span class="d">${i+1}</span>${SEC_NAMES[i]}</a>`).join("");
+$("#snav").addEventListener("click", e => {
+  const a = e.target.closest("a"); if(!a) return;
+  e.preventDefault();
+  const c = $(a.getAttribute("href")); c.open = true;
+  c.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+function sectionDone(s){
+  return {
+    pt: !!(s.pt_name && s.date),
+    sed: !!(s.sed_type || s.tolerance),
+    e: !!(s.e_normal || s.la || s.hh || s.var || s.bar_c || s.bar_m || s.e_other.length || s.e_free),
+    s: !!(s.s_normal || s.gastro || s.s_content || s.s_ul_loc || s.s_ul_f || s.pol_n || s.pol_mm || s.s_other.length || s.s_free),
+    d: !!(s.d_normal || s.bulb || s.d_ul_loc || s.d_ul_f || s.d_other.length || s.d_free),
+    cq: !!(s.c_prep || s.c_bb_r || s.c_bb_t || s.c_bb_l || s.c_reach || s.c_wt),
+    c: !!(s.c_normal || getPolyps().length || s.c_div || s.c_hem || s.c_colitis || s.c_other.length || s.c_free),
+    bx: !!(s.sydney.length || s.bx_other || s.hp_test || s.int.length || s.int_free || s.comp_free),
+    img: imgs.length > 0,
+    concl: !!s.concl,
+  };
+}
+function updateNav(s){
+  const d = sectionDone(s);
+  let n = 0;
+  SEC_KEYS.forEach(k => {
+    const card = $("#sec-" + k), link = $(`#snav a[data-k="${k}"]`);
+    link.hidden = card.hidden;
+    if(card.hidden) return;
+    n++;
+    link.classList.toggle("done", d[k]);
+    $(".d", link).textContent = n;
+    card.classList.toggle("done", d[k]);
+    $("summary .n", card).textContent = d[k] ? "✓" : n;
+  });
+}
+let navRaf = 0;
+addEventListener("scroll", () => {
+  cancelAnimationFrame(navRaf);
+  navRaf = requestAnimationFrame(() => {
+    const y = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--topH")) + 80;
+    let cur = cards[0];
+    cards.forEach(c => { if(!c.hidden && c.getBoundingClientRect().top <= y) cur = c; });
+    $$("#snav a").forEach(a => a.classList.toggle("active", a.dataset.k === cur.dataset.key));
+  });
+}, { passive: true });
+
+/* ================= Tema dhe pamja mobile ================= */
+const K_THEME = "gastro_sq_theme", THEMES = ["auto","light","dark"], THEME_IC = { auto:"◐", light:"☀", dark:"☾" };
+function applyTheme(t){
+  if(t === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+  $("#themeIc").textContent = THEME_IC[t];
+  $("#b-theme").title = "Tema: " + ({ auto:"automatike", light:"e çelët", dark:"e errët" })[t] + " – kliko për ta ndryshuar";
+}
+let theme = store.get(K_THEME) || "auto";
+applyTheme(theme);
+$("#b-theme").onclick = () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; store.set(K_THEME, theme); applyTheme(theme); };
+$$(".mtabs button").forEach(b => b.onclick = () => {
+  document.body.classList.toggle("view-report", b.dataset.view === "report");
+  $$(".mtabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  scrollTo({ top: 0 });
+});
+new ResizeObserver(() => document.documentElement.style.setProperty("--topH", $("#top").offsetHeight + "px")).observe($("#top"));
+
+/* ================= Teksti i seksioneve ================= */
+function secEsophagus(s){
+  const o = [];
+  if(s.e_normal){
+    o.push("Ezofagu me kalueshmëri të lirë dhe mukozë me pamje normale në gjithë gjatësinë.");
+    o.push(`Linja Z e rregullt${s.zline ? `, në ${s.zline} cm nga harqet dentare` : ""}.`);
+  } else {
+    if(s.zline) o.push(`Linja Z në ${s.zline} cm nga harqet dentare.`);
+    if(s.la) o.push(`Ezofagit refluksi, gradë LA ${s.la}.`);
+    if(s.bar_c || s.bar_m) o.push(`Mukozë me pamje cilindrike (Barrett), klasifikimi i Pragës C${s.bar_c||0}M${s.bar_m||0}.`);
+    if(s.hh === "po") o.push(`Hernie hiatale rrëshqitëse${s.hh_cm ? ` ${s.hh_cm} cm` : ""}.`);
+    if(s.var) o.push(`Varice ezofageale ${s.var}, ${s.var_red ? "me" : "pa"} shenja të kuqe.`);
+    if(s.e_other.length) o.push(cap(s.e_other.join(", ")) + ".");
+  }
+  if(s.e_free) o.push(dot(s.e_free));
+  return o.join(" ");
+}
+function retroText(s){
+  if(s.retro === "nuk u krye") return "Retrofleksioni nuk u krye.";
+  if(s.retro === "u krye") return s.hill ? `Në retrofleksion: valvula gastroezofageale Hill ${s.hill}${s.hill === "I" || s.hill === "II" ? ", kardia pa veçori" : ""}.` : "Në retrofleksion kardia pa veçori.";
+  return s.hill ? `Valvula gastroezofageale Hill ${s.hill}.` : "";
+}
+function ulcerText(where, loc, mm, f){
+  if(!loc && !f) return "";
+  let t = `Ulçerë ${where}`;
+  if(loc) t += ` në ${loc}`;
+  if(mm) t += `, ${mm} mm`;
+  if(f) t += `, Forrest ${f} (${FORREST[f]})`;
+  return t + ".";
+}
+function polypText(s){
+  if(!s.pol_n && !s.pol_mm) return "";
+  const n = Number(s.pol_n) || 1;
+  let t = n === 1 ? "Polip" : `${n} polipe`;
+  if(s.pol_loc) t += ` në ${s.pol_loc}`;
+  if(s.pol_mm) t += `, ${n === 1 ? "" : "deri në "}${s.pol_mm} mm`;
+  if(s.pol_paris) t += `, Paris ${s.pol_paris}`;
+  return t + ".";
+}
+function secStomach(s){
+  const o = [];
+  if(s.s_normal){
+    o.push("Stomaku me sasi të vogël lëngu të pastër. Mukozë me pamje normale në fundus, korpus, angulus dhe antrum. Pilori i rrumbullakët dhe i kalueshëm.");
+  } else {
+    if(s.s_content) o.push(`Përmbajtja: ${s.s_content}.`);
+    if(s.gastro) o.push(`Gastropati ${s.gastro}.`);
+    o.push(ulcerText("gastrike", s.s_ul_loc, s.s_ul_mm, s.s_ul_f));
+    o.push(polypText(s));
+    if(s.s_other.length) o.push(cap(s.s_other.join(", ")) + ".");
+  }
+  o.push(retroText(s));
+  if(s.s_free) o.push(dot(s.s_free));
+  return o.filter(Boolean).join(" ");
+}
+const EXTENT = { D2:"pjesa e dytë e duodenit (D2)", D3:"pjesa e tretë e duodenit (D3)", bulb:"bulbi duodenal", pilor:"pilori" };
+function secDuodenum(s){
+  const o = [];
+  if(s.extent === "pilor") o.push("Pilori nuk u kalua.");
+  if(s.d_normal){
+    if(s.extent !== "pilor")
+      o.push(s.extent === "bulb" ? "Bulbi duodenal me mukozë normale." :
+        `Bulbi duodenal dhe ${EXTENT[s.extent]} me mukozë dhe pamje vilore normale.`);
+  } else {
+    if(s.bulb) o.push(cap(s.bulb) + ".");
+    o.push(ulcerText("duodenale", s.d_ul_loc, s.d_ul_mm, s.d_ul_f));
+    if(s.d_other.length) o.push(cap(s.d_other.join(", ")) + ".");
+    if(!s.bulb && !s.d_ul_loc && !s.d_ul_f && !s.d_other.length && s.extent !== "pilor")
+      o.push(`Ekzaminim deri në ${EXTENT[s.extent]}.`);
+  }
+  if(s.d_free) o.push(dot(s.d_free));
+  return o.filter(Boolean).join(" ");
+}
+function secSedation(s){
+  const drugs = [];
+  if(s.propofol) drugs.push(`propofol ${s.propofol} mg`);
+  if(s.midazolam) drugs.push(`midazolam ${s.midazolam} mg`);
+  if(s.fentanyl) drugs.push(`fentanil ${s.fentanyl} µg`);
+  if(s.sed_other) drugs.push(s.sed_other);
+  const o = [];
+  if(s.sed_type) o.push(cap(s.sed_type) + (drugs.length ? `: ${drugs.join(", ")}` : "") + ".");
+  else if(drugs.length) o.push(cap(drugs.join(", ")) + ".");
+  if(s.o2) o.push(`O₂ ${s.o2} l/min.`);
+  if(s.monitor) o.push(`Monitorim: ${s.monitor}.`);
+  if(s.tolerance) o.push(`Procedura u tolerua ${s.tolerance === "e mirë" ? "mirë" : s.tolerance === "e dobët" ? "dobët" : "në mënyrë të pranueshme"}.`);
+  return o.join(" ");
+}
+function secBiopsy(s){
+  const o = [];
+  if(s.sydney.length) o.push(`Biopsi sipas Sydney: ${s.sydney.join(", ")}.`);
+  if(s.bx_other) o.push(`Biopsi: ${dot(s.bx_other)}`);
+  if(s.hp_test) o.push(`H. pylori (${s.hp_test}): ${s.hp_res || "në pritje"}.`);
+  if(s.int.length) o.push(`Ndërhyrje: ${s.int.join(", ")}${s.int_free ? ` – ${s.int_free}` : ""}.`);
+  else if(s.int_free) o.push(`Ndërhyrje: ${dot(s.int_free)}`);
+  return o.join(" ");
+}
+function secComp(s){
+  return (s.comp ? cap(s.comp) : "Asnjë") + (s.comp_free ? ` – ${s.comp_free}` : "") + ".";
+}
+
+/* ================= Polipet e kolonit ================= */
+function getPolyps(){ try { const a = JSON.parse(form.elements.c_polyps.value || "[]"); return Array.isArray(a) ? a : []; } catch { return []; } }
+let polRendered = null;
+function setPolyps(a){ form.elements.c_polyps.value = a.length ? JSON.stringify(a) : ""; polRendered = form.elements.c_polyps.value; }
+const opts = (list, v, lbl = x => x) => `<option value="">—</option>` + list.map(x => `<option value="${esc(x)}"${x === v ? " selected" : ""}>${esc(lbl(x))}</option>`).join("");
+function renderPolyps(){
+  const P = getPolyps();
+  polRendered = form.elements.c_polyps.value;
+  $("#polyps").innerHTML = P.length ? P.map((p, i) => `<div class="prow" data-i="${i}">
+      <span class="pn">${i+1}</span>
+      <label class="f">Lokalizimi<select data-k="loc">${opts(POL_LOC, p.loc)}</select></label>
+      <label class="f sm">mm<input type="number" min="0" data-k="mm" value="${esc(p.mm)}"></label>
+      <label class="f sm">Paris<select data-k="paris">${opts(POL_PARIS, p.paris)}</select></label>
+      <label class="f sm">NICE<select data-k="nice">${opts(["1","2","3"], p.nice)}</select></label>
+      <label class="f">Heqja<select data-k="rem">${opts(Object.keys(POL_REM), p.rem)}</select></label>
+      <label class="f">Rikuperimi<select data-k="ret">${opts(["u rikuperua","nuk u rikuperua"], p.ret)}</select></label>
+      <label class="f sm">Kavanoza<input type="text" data-k="jar" value="${esc(p.jar)}"></label>
+      <button type="button" class="prm" data-rmpol="${i}" title="Hiq polipin">✕</button>
+    </div>`).join("") : `<div class="hint" style="margin-top:0">Asnjë polip. Shtyp “Shto polip” për secilin polip të gjetur.</div>`;
+}
+$("#polyps").addEventListener("input", polEdit);
+$("#polyps").addEventListener("change", polEdit);
+function polEdit(e){
+  const row = e.target.closest(".prow"), k = e.target.dataset.k; if(!row || !k) return;
+  const P = getPolyps(); P[row.dataset.i][k] = e.target.value; setPolyps(P);
+}
+$("#polyps").addEventListener("click", e => {
+  const b = e.target.closest("[data-rmpol]"); if(!b) return;
+  const P = getPolyps(); P.splice(+b.dataset.rmpol, 1); setPolyps(P); renderPolyps(); onChange();
+});
+$("#b-addpol").onclick = () => {
+  const P = getPolyps();
+  P.push({ loc:"", mm:"", paris:"", nice:"", rem:"", ret:"u rikuperua", jar: String(P.length + 1) });
+  setPolyps(P); renderPolyps(); onChange();
+  $(`#polyps .prow:last-child select`)?.focus();
+};
+
+function bbps(s){
+  const v = [s.c_bb_r, s.c_bb_t, s.c_bb_l];
+  if(v.some(x => x === "" || x == null)) return null;
+  const n = v.map(Number), total = n.reduce((a, b) => a + b, 0);
+  return { total, parts: v.join("-"), ok: total >= 6 && n.every(x => x >= 2) };
+}
+const reachComplete = s => s.c_reach === "cekum" || s.c_reach === "ileum";
+function secColonQuality(s){
+  const o = [];
+  if(s.c_prep) o.push(`Përgatitja: ${s.c_prep}${s.c_prep_split ? ", me dozë të ndarë" : ""}.`);
+  const b = bbps(s);
+  if(b) o.push(`Shkalla e Bostonit (BBPS): ${b.total}/9 (${b.parts}) – përgatitje ${b.ok ? "e përshtatshme" : "e pamjaftueshme"}.`);
+  if(s.c_reach){
+    if(reachComplete(s)) o.push(`Intubim i plotë deri në ${REACH[s.c_reach]}.`);
+    else o.push(`Ekzaminim jo i plotë – u arrit deri në ${REACH[s.c_reach]}${s.c_incomplete ? ` (${s.c_incomplete})` : ""}.`);
+  }
+  if(s.c_land.length) o.push(`U identifikuan: ${s.c_land.join(", ")}.`);
+  if(s.c_wt) o.push(`Koha e tërheqjes: ${s.c_wt} min.`);
+  if(s.c_retro) o.push(`Retrofleksioni në rektum ${s.c_retro}.`);
+  if(s.c_co2) o.push("Insuflim me CO₂.");
+  return o.join(" ");
+}
+function polypLine(p, i){
+  const parts = [cap(p.loc) || "Lokalizim i pashënuar"];
+  if(p.mm) parts.push(`${p.mm} mm`);
+  if(p.paris) parts.push(`Paris ${p.paris}`);
+  if(p.nice) parts.push(`NICE ${p.nice}`);
+  let t = `${i+1}. ${parts.join(", ")}`;
+  if(p.rem) t += ` – ${POL_REM[p.rem] || p.rem}`;
+  if(p.ret && p.rem !== "nuk u hoq") t += `, ${p.ret}`;
+  if(p.jar) t += ` (kavanoza ${p.jar})`;
+  return t + ".";
+}
+function secColon(s){
+  const o = [];
+  if(s.c_normal) o.push("Mukozë me pamje normale në gjithë kolonin dhe rektumin, me vaskularizim të ruajtur. Pa polipe, pa divertikuj.");
+  else {
+    const P = getPolyps();
+    if(P.length) o.push(P.length === 1 ? "U gjet 1 polip (shih “Polipe”)." : `U gjetën ${P.length} polipe (shih “Polipe”).`);
+    if(s.c_div) o.push(`Divertikulozë ${s.c_div}.`);
+    if(s.c_hem) o.push(`Hemoroide të brendshme, gradë ${s.c_hem}.`);
+    if(s.c_colitis){
+      let t = cap(s.c_colitis);
+      if(s.c_mayo !== "") t += `, aktivitet endoskopik Mayo ${s.c_mayo}`;
+      if(s.c_col_ext) t += `, shtrirja: ${s.c_col_ext}`;
+      o.push(t + ".");
+    }
+    if(s.c_other.length) o.push(cap(s.c_other.join(", ")) + ".");
+  }
+  if(s.c_free) o.push(dot(s.c_free));
+  return o.join(" ");
+}
+function secColonBiopsy(s){
+  const o = [];
+  if(s.c_bx.length) o.push(`Biopsi: ${s.c_bx.join(", ")}.`);
+  if(s.c_bx_free) o.push(dot(s.c_bx_free));
+  if(s.c_tattoo) o.push("Tatuazh me bojë endoskopike.");
+  return o.join(" ");
+}
+function colonConclusion(s){
+  const d = [];
+  if(s.c_reach && !reachComplete(s)) d.push(`Kolonoskopi jo e plotë (deri në ${REACH[s.c_reach]})`);
+  const b = bbps(s);
+  if(b && !b.ok) d.push(`Përgatitje e pamjaftueshme e zorrës (BBPS ${b.total})`);
+  if(!s.c_normal){
+    const P = getPolyps();
+    if(P.length){
+      const max = Math.max(0, ...P.map(p => +p.mm || 0));
+      const removed = P.filter(p => p.rem && p.rem !== "nuk u hoq").length;
+      let t = P.length === 1 ? "Polip kolorektal" : `${P.length} polipe kolorektale`;
+      if(max) t += ` (${P.length === 1 ? "" : "më i madhi "}${max} mm)`;
+      if(removed) t += P.length === 1 ? " – u hoq endoskopikisht" : removed === P.length ? " – u hoqën të gjitha endoskopikisht" : ` – u hoqën ${removed}`;
+      d.push(t);
+    }
+    if(s.c_div) d.push(`Divertikulozë ${s.c_div}`);
+    if(s.c_hem) d.push(`Hemoroide të brendshme, gradë ${s.c_hem}`);
+    if(s.c_colitis) d.push(cap(s.c_colitis) + (s.c_mayo !== "" ? `, Mayo ${s.c_mayo}` : "") + (s.c_col_ext ? `, ${s.c_col_ext}` : ""));
+    s.c_other.forEach(x => d.push(`${cap(x)} – kolon`));
+  }
+  return d;
+}
+
+/* ================= Konkluzioni automatik ================= */
+function egdConclusion(s){
+  const d = [];
+  if(!s.e_normal){
+    if(s.la) d.push(`Ezofagit refluksi, gradë LA ${s.la}`);
+    if(s.bar_c || s.bar_m) d.push(`Ezofag Barrett (Praga C${s.bar_c||0}M${s.bar_m||0})`);
+    if(s.hh === "po") d.push(`Hernie hiatale${s.hh_cm ? ` ${s.hh_cm} cm` : ""}`);
+    if(s.var) d.push(`Varice ezofageale ${s.var}${s.var_red ? " me shenja të kuqe" : ""}`);
+    s.e_other.forEach(x => d.push(`${cap(x)} – ezofag`));
+  }
+  if(s.hill === "III" || s.hill === "IV") d.push(`Insuficiencë e kardias (Hill ${s.hill})`);
+  if(!s.s_normal){
+    if(s.gastro) d.push(`Gastropati ${s.gastro}`);
+    if(s.s_ul_loc || s.s_ul_f) d.push(`Ulçerë gastrike${s.s_ul_loc ? ` (${s.s_ul_loc})` : ""}${s.s_ul_f ? `, Forrest ${s.s_ul_f}` : ""}`);
+    if(s.pol_n || s.pol_mm) d.push(polypText(s).replace(/\.$/, ""));
+    s.s_other.forEach(x => d.push(`${cap(x)} – stomak`));
+  }
+  if(!s.d_normal){
+    if(s.bulb) d.push(cap(s.bulb));
+    if(s.d_ul_loc || s.d_ul_f) d.push(`Ulçerë duodenale${s.d_ul_loc ? ` (${s.d_ul_loc})` : ""}${s.d_ul_f ? `, Forrest ${s.d_ul_f}` : ""}`);
+    s.d_other.filter(x => !/pa veçori/.test(x)).forEach(x => d.push(`${cap(x)} – duoden`));
+  }
+  if(s.hp_res === "pozitiv") d.push("Infeksion me H. pylori");
+  return d;
+}
+function autoConclusion(s){
+  const f = procFlags(s.proc), out = [];
+  if(f.egd){
+    const d = egdConclusion(s);
+    out.push(...(d.length ? d : ["Ezofagogastroduodenoskopi pa gjetje patologjike"]));
+  }
+  if(f.colo){
+    const d = colonConclusion(s);
+    if(d.length) out.push(...d);
+    else out.push(reachComplete(s) ? "Kolonoskopi totale pa gjetje patologjike" : "Kolonoskopi pa gjetje patologjike");
+  }
+  return out.join("\n");
+}
+
+/* ================= Raporti ================= */
+function build(){
+  const s = readForm(form), c = readForm(clinicForm);
+  const f = procFlags(s.proc);
+  const ind = [...(f.egd ? s.ind : []), ...(f.colo ? s.ind_c : [])]; if(s.ind_free) ind.push(s.ind_free);
+  const both = f.egd && f.colo;
+  const egdBx = secBiopsy({ ...s, int: [], int_free: "" });
+  const intTxt = s.int.length ? `${cap(s.int.join(", "))}${s.int_free ? ` – ${s.int_free}` : ""}.` : (s.int_free ? dot(cap(s.int_free)) : "");
+  const P = f.colo && !s.c_normal ? getPolyps() : [];
+  const a = age(s.pt_dob, s.date);
+  return {
+    s, c,
+    meta: [
+      ["Pacienti", s.pt_name], ["Data e procedurës", [fmtDate(s.date), s.time].filter(Boolean).join(", ")],
+      ["Datëlindja", s.pt_dob ? `${fmtDate(s.pt_dob)}${a !== "" ? ` (${a} vjeç)` : ""}` : ""], ["Mjeku endoskopist", s.endo],
+      ["Gjinia", s.pt_sex], ["Asistenti/ja", s.assistant],
+      ["Nr. i dosjes", s.pt_id], ["Aparati", s.scope],
+      ["Referuar nga", s.referrer], ["ASA", s.asa],
+    ],
+    f, title: PROC_TITLE[s.proc] || PROC_TITLE.gastroskopi,
+    sections: [
+      ["Indikacioni", ind.length ? cap(ind.join(", ")) + "." + (s.consent ? " Pëlqimi i informuar u mor me shkrim." : "") : ""],
+      ["Sedacioni", secSedation(s)],
+      ...(f.egd ? [
+        ...(both ? [["__h", "Gastroskopia"]] : []),
+        ["Ezofagu", secEsophagus(s)],
+        ["Stomaku", secStomach(s)],
+        ["Duodeni", secDuodenum(s)],
+        [f.colo ? "Biopsi – gastroskopi" : "Biopsi", egdBx],
+      ] : []),
+      ...(f.colo ? [
+        ...(both ? [["__h", "Kolonoskopia"]] : []),
+        ["Përgatitja dhe cilësia", secColonQuality(s)],
+        ["Koloni dhe rektumi", secColon(s)],
+        ["Polipe", P.map(polypLine).join("\n")],
+        ["Biopsi në kolon", secColonBiopsy(s)],
+      ] : []),
+      ...(both ? [["__h", "Të përbashkëta"]] : []),
+      ["Ndërhyrje terapeutike", intTxt],
+      ["Komplikime", secComp(s)],
+    ],
+    concl: s.concl.split("\n").map(x => x.replace(/^\s*(\d+[.)]|[-•*])\s*/, "").trim()).filter(Boolean),
+    recs:  s.recs.split("\n").map(x => x.replace(/^\s*(\d+[.)]|[-•*])\s*/, "").trim()).filter(Boolean),
+  };
+}
+
+function renderHTML(r){
+  const {s, c} = r;
+  const v = x => x ? esc(x) : `<span class="empty">—</span>`;
+  let rows = "";
+  for(let i = 0; i < r.meta.length; i += 2){
+    const [k1,v1] = r.meta[i], [k2,v2] = r.meta[i+1];
+    rows += `<tr><td class="k">${k1}</td><td>${k1 === "Pacienti" && v1 ? `<b>${esc(v1)}</b>` : v(v1)}</td><td class="k">${k2}</td><td>${v(v2)}</td></tr>`;
+  }
+  const secs = r.sections.filter(([t,b]) => b || ["Ezofagu","Stomaku","Duodeni","Koloni dhe rektumi"].includes(t))
+    .map(([t,b]) => t === "__h" ? `<div class="rgrp">${esc(b)}</div>` :
+      `<section class="rs"><h4>${t}</h4><p>${b ? esc(b) : `<span class="empty">Pa të dhëna.</span>`}</p></section>`).join("");
+  const pics = imgs.length ? `<section class="rs"><h4>Fotodokumentimi</h4><div class="rimgs">${
+    imgs.map((im,i) => `<figure><img src="${im.src}" alt=""><figcaption>${i+1}. ${esc(im.cap)}</figcaption></figure>`).join("")}</div></section>` : "";
+  const concl = `<div class="concl"><h4>Konkluzioni</h4>${
+    r.concl.length ? `<ol>${r.concl.map(x => `<li>${esc(dot(x))}</li>`).join("")}</ol>` : `<p class="empty">Shkruaj ose gjenero konkluzionin.</p>`}</div>`;
+  const recs = r.recs.length ? `<section class="rs"><h4>Rekomandime</h4><ul class="recs">${r.recs.map(x => `<li>${esc(dot(x))}</li>`).join("")}</ul></section>` : "";
+  return `
+    <div class="rh">
+      <div class="rh-l">${c.c_logo ? `<img src="${c.c_logo}" alt="">` : ""}
+        ${c.c_name || c.c_logo ? `<div><div class="clinic">${esc(c.c_name)}</div><div class="addr">${esc(c.c_addr)}</div></div>`
+          : `<button type="button" class="rh-add no-print">＋ Shto logon dhe emrin e klinikës</button>`}</div>
+      <div class="rh-r"><div class="doc-t">${esc(r.title)}</div><div class="doc-s">Raport endoskopik</div></div>
+    </div>
+    <table class="meta">${rows}</table>
+    ${secs}${pics}${concl}${recs}
+    <div class="sig"><div><div class="ln">${esc(s.endo || "Mjeku endoskopist")}</div><div style="color:#666;font-size:8.5pt">Nënshkrimi dhe vula</div></div></div>
+    <div class="foot">Raport i gjeneruar më ${fmtDate(today())}</div>`;
+}
+
+function renderText(r){
+  const L = [];
+  L.push("RAPORT ENDOSKOPIK – " + r.title.toUpperCase());
+  if(r.c.c_name) L.push(r.c.c_name);
+  L.push("");
+  r.meta.filter(([,v]) => v).forEach(([k,v]) => L.push(`${k}: ${v}`));
+  r.sections.filter(([,b]) => b).forEach(([t,b]) => { t === "__h" ? L.push("", `=== ${b.toUpperCase()} ===`) : L.push("", t.toUpperCase(), b); });
+  if(imgs.length) L.push("", "FOTODOKUMENTIMI", imgs.map((im,i) => `${i+1}. ${im.cap || "foto"}`).join("; "));
+  if(r.concl.length) L.push("", "KONKLUZIONI", ...r.concl.map((x,i) => `${i+1}. ${dot(x)}`));
+  if(r.recs.length) L.push("", "REKOMANDIME", ...r.recs.map(x => `- ${dot(x)}`));
+  L.push("", r.s.endo || "");
+  return L.join("\n").trim() + "\n";
+}
+
+function summaries(s){
+  const set = (k,t) => { const el = $(`[data-sum="${k}"]`); if(el) el.textContent = t; };
+  set("pt", [s.pt_name, fmtDate(s.date)].filter(Boolean).join(" · "));
+  set("sed", s.sed_type);
+  set("e", s.e_normal ? "normal" : [s.la && "LA " + s.la, (s.bar_c||s.bar_m) && "Barrett", s.hh === "po" && "HH", s.var].filter(Boolean).join(", "));
+  set("s", s.s_normal ? "normal" : [s.gastro, (s.s_ul_loc||s.s_ul_f) && "ulçerë", (s.pol_n||s.pol_mm) && "polip"].filter(Boolean).join(", "));
+  set("d", s.d_normal ? "normal" : [s.bulb, (s.d_ul_loc||s.d_ul_f) && "ulçerë"].filter(Boolean).join(", "));
+  set("bx", [s.sydney.length && "Sydney", s.bx_other && "biopsi", s.int.length && s.int.length + " ndërhyrje"].filter(Boolean).join(", "));
+  set("img", imgs.length ? imgs.length + " foto" : "");
+  const b = bbps(s), P = getPolyps();
+  set("cq", [b && `BBPS ${b.total}`, s.c_reach && (reachComplete(s) ? "e plotë" : "jo e plotë"), s.c_wt && `${s.c_wt} min`].filter(Boolean).join(", "));
+  set("c", s.c_normal ? "normal" : [P.length && `${P.length} polip${P.length > 1 ? "e" : ""}`, s.c_div && "divertikuj", s.c_hem && "hemoroide", s.c_colitis].filter(Boolean).join(", "));
+  const bb = $("#bbps");
+  bb.textContent = b ? `Totali ${b.total}/9 – ${b.ok ? "e përshtatshme" : "e pamjaftueshme"}` : "";
+  bb.className = "bbps" + (b ? (b.ok ? " ok" : " bad") : "");
+  bb.hidden = !b;
+}
+
+function render(){
+  if(form.elements.c_polyps.value !== polRendered) renderPolyps();
+  const r = build();
+  $("#report").innerHTML = renderHTML(r);
+  summaries(r.s);
+  syncSegs();
+  updateNav(r.s);
+}
+
+/* ================= Arkivi (IndexedDB) ================= */
+const db = {
+  _p: null,
+  open(){
+    return this._p ||= new Promise((res, rej) => {
+      const r = indexedDB.open("gastro_sq_v2", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("patients", { keyPath: "id" });
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+  },
+  async tx(mode, fn){
+    const d = await this.open();
+    return new Promise((res, rej) => {
+      const t = d.transaction("patients", mode), req = fn(t.objectStore("patients"));
+      t.oncomplete = () => res(req && "result" in req ? req.result : undefined);
+      t.onerror = t.onabort = () => rej(t.error);
+    });
+  },
+  all(){ return this.tx("readonly", s => s.getAll()); },
+  get(id){ return this.tx("readonly", s => s.get(id)); },
+  count(){ return this.tx("readonly", s => s.count()); },
+  put(r){ return this.tx("readwrite", s => s.put(r)); },
+  del(id){ return this.tx("readwrite", s => s.delete(id)); },
+  putMany(rs){ return this.tx("readwrite", s => { rs.forEach(r => s.put(r)); }); },
+};
+const K_LASTBK = "gastro_sq_v2_lastbackup";
+const newId = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+let cur = { id: newId(), created: 0 };
+let dbOk = true;
+
+/* ================= Ruajtja ================= */
+let saveT;
+const hhmm = () => new Date().toTimeString().slice(0,5);
+async function saveNow(){
+  clearTimeout(saveT);
+  const f = readForm(form);
+  store.set(K_DRAFT, { id: cur.id, created: cur.created, form: f });
+  store.set(K_CLINIC, readForm(clinicForm));
+  if(!f.pt_name){ $("#saved").textContent = "Draft (pa emër)"; $("#saved").title = "Shkruaj emrin e pacientit që raporti të ruhet në arkiv"; return; }
+  try {
+    const now = Date.now();
+    cur.created ||= now;
+    await db.put({ id: cur.id, created: cur.created, updated: now, form: f, imgs });
+    $("#saved").textContent = "Ruajtur në arkiv " + hhmm();
+  } catch {
+    dbOk = false;
+    $("#saved").textContent = "⚠ Ruajtja në arkiv dështoi";
+  }
+  refreshBadge();
+}
+function saveSoon(){ clearTimeout(saveT); saveT = setTimeout(saveNow, 500); }
+addEventListener("pagehide", saveNow);
+
+function daysAgo(ts){ return Math.floor((Date.now() - ts) / 864e5); }
+async function refreshBadge(){
+  let n = 0;
+  try { n = await db.count(); } catch { dbOk = false; }
+  $("#archN").textContent = n ? `(${n})` : "";
+  const last = store.get(K_LASTBK), bk = $("#bk");
+  if(!dbOk){ bk.textContent = "⚠ Arkivi i padisponueshëm"; bk.className = "bk warn"; return; }
+  if(!n){ bk.textContent = ""; bk.hidden = true; return; }
+  bk.hidden = false;
+  if(!last){ bk.textContent = "Backup: asnjëherë"; bk.className = "bk warn"; return; }
+  const d = daysAgo(last);
+  bk.textContent = "Backup: " + (d === 0 ? "sot" : d === 1 ? "dje" : `${d} ditë më parë`);
+  bk.className = "bk " + (d > 7 ? "warn" : "ok");
+}
+
+function loadRecord(r){
+  cur = { id: r.id, created: r.created || 0 };
+  form.reset();
+  writeForm(form, r.form || {});
+  imgs = Array.isArray(r.imgs) ? r.imgs : [];
+  renderImgs(); syncToggles(); render();
+  store.set(K_DRAFT, { id: cur.id, created: cur.created, form: readForm(form) });
+}
+function isBlank(f){
+  return !f.pt_name && !f.concl && !f.e_normal && !f.s_normal && !f.d_normal && !f.la && !f.gastro && !imgs.length;
+}
+
+/* ---------- Dritarja e arkivit ---------- */
+const archDlg = $("#archDlg");
+let archCache = [];
+async function openArchive(){
+  await saveNow();
+  try { archCache = await db.all(); } catch { archCache = []; }
+  archCache.sort((a,b) => (b.form.date || "").localeCompare(a.form.date || "") || b.updated - a.updated);
+  $("#archQ").value = "";
+  drawArchive();
+  const last = store.get(K_LASTBK);
+  $("#bkInfo").textContent = last ? `Backup-i i fundit: ${fmtDate(new Date(last).toISOString().slice(0,10))}` : "Asnjë backup ende.";
+  archDlg.showModal();
+}
+function drawArchive(){
+  const q = $("#archQ").value.trim().toLowerCase();
+  const rows = archCache.filter(r => {
+    if(!q) return true;
+    const f = r.form;
+    return [f.pt_name, f.pt_id, fmtDate(f.date), fmtDate(f.pt_dob), f.concl].join(" ").toLowerCase().includes(q);
+  });
+  $("#archStat").textContent = `${archCache.length} pacientë` + (q ? ` · ${rows.length} gjetur` : "");
+  $("#archList").innerHTML = rows.length ? rows.map(r => {
+    const f = r.form, c1 = (f.concl || "").split("\n")[0];
+    return `<li class="${r.id === cur.id ? "cur" : ""}">
+      <div class="who"><div class="nm">${esc(f.pt_name)}${f.pt_id ? ` <span class="stat">#${esc(f.pt_id)}</span>` : ""}</div>
+      <div class="mt">${esc(fmtDate(f.date))}${f.pt_dob ? ` · dl. ${esc(fmtDate(f.pt_dob))}` : ""}${c1 ? ` · ${esc(c1)}` : ""}${r.imgs?.length ? ` · ${r.imgs.length} foto` : ""}</div></div>
+      <button class="btn light sm" data-open="${esc(r.id)}">Hap</button>
+      <button class="btn ghost sm" data-del="${esc(r.id)}" title="Fshi">🗑</button></li>`;
+  }).join("") : `<li class="stat">Asnjë pacient${q ? " nuk përputhet me kërkimin" : " në arkiv ende"}.</li>`;
+}
+$("#b-arch").onclick = openArchive;
+$("#bk").onclick = openArchive;
+$("#archQ").oninput = drawArchive;
+archDlg.addEventListener("click", async e => {
+  if(e.target.closest("[data-close]") || e.target === archDlg){ archDlg.close(); return; }
+  const o = e.target.closest("[data-open]"), d = e.target.closest("[data-del]");
+  if(o){
+    const r = archCache.find(x => x.id === o.dataset.open);
+    if(r){ loadRecord(r); archDlg.close(); }
+  } else if(d){
+    const r = archCache.find(x => x.id === d.dataset.del);
+    if(!r || !confirm(`Të fshihet përgjithmonë raporti i ${r.form.pt_name} (${fmtDate(r.form.date)})?`)) return;
+    await db.del(r.id);
+    archCache = archCache.filter(x => x.id !== r.id);
+    if(r.id === cur.id) cur = { id: newId(), created: 0 };
+    drawArchive(); refreshBadge();
+  }
+});
+
+/* ---------- Enkriptimi (AES-GCM 256, çelës nga PBKDF2-SHA256) ---------- */
+const te = new TextEncoder(), td = new TextDecoder();
+function b64(bytes){
+  let s = "";
+  for(let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+function unb64(str){ const s = atob(str), u = new Uint8Array(s.length); for(let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
+async function deriveKey(pw, salt, iter){
+  const base = await crypto.subtle.importKey("raw", te.encode(pw), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name:"PBKDF2", salt, iterations: iter, hash:"SHA-256" }, base,
+    { name:"AES-GCM", length:256 }, false, ["encrypt","decrypt"]);
+}
+async function encryptStr(str, pw){
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12)), iter = 310000;
+  const ct = await crypto.subtle.encrypt({ name:"AES-GCM", iv }, await deriveKey(pw, salt, iter), te.encode(str));
+  return { kdf:"PBKDF2-SHA256", iter, salt: b64(salt), iv: b64(iv), data: b64(new Uint8Array(ct)) };
+}
+async function decryptStr(o, pw){
+  const key = await deriveKey(pw, unb64(o.salt), o.iter);
+  return td.decode(await crypto.subtle.decrypt({ name:"AES-GCM", iv: unb64(o.iv) }, key, unb64(o.data)));
+}
+const canCrypto = !!(window.crypto && crypto.subtle);
+
+/* ---------- Dritarja e fjalëkalimit ---------- */
+function askPassword(mode, check){
+  // mode "backup": opsion enkriptimi + konfirmim; "restore": vetëm fjalëkalimi
+  const dlg = $("#pwDlg"), enc = $("#pwEnc"), p1 = $("#pw1"), p2 = $("#pw2"), err = $("#pwErr");
+  const backup = mode === "backup";
+  $("#pwTitle").textContent = backup ? "Backup i plotë" : "Backup i enkriptuar";
+  $("#pwText").textContent = backup
+    ? "Shkarkohet një skedar me të gjithë pacientët dhe fotot. Ruaje në iCloud Drive dhe në një disk USB."
+    : "Shkruaj fjalëkalimin me të cilin u krijua ky backup.";
+  $("#pwEncRow").hidden = !backup || !canCrypto;
+  $("#pw2Row").hidden = !backup;
+  $("#pwNote").hidden = !backup;
+  enc.checked = backup && canCrypto;
+  p1.value = p2.value = ""; err.textContent = "";
+  if(backup && !canCrypto) err.textContent = "Ky shfletues nuk mbështet enkriptimin – backup-i do të jetë i pa-enkriptuar.";
+  const sync = () => { $("#pwFields").hidden = backup && !enc.checked; $("#pwNote").hidden = !backup || !enc.checked; };
+  enc.onchange = sync; sync();
+  $("#pwOk").textContent = backup ? "Shkarko backup-in" : "Hap";
+  return new Promise(resolve => {
+    dlg.onclose = null;
+    $("#pwForm").onsubmit = async e => {
+      if(e.submitter?.value !== "ok") return;           // Anulo
+      e.preventDefault();
+      if(backup && !enc.checked){ dlg.close(); resolve({ password: null }); return; }
+      if(p1.value.length < 8){ err.textContent = backup ? "Fjalëkalimi duhet të ketë të paktën 8 karaktere." : "Shkruaj fjalëkalimin."; return; }
+      if(backup && p1.value !== p2.value){ err.textContent = "Fjalëkalimet nuk përputhen."; return; }
+      if(check){
+        err.textContent = "Duke kontrolluar …";
+        const r = await check(p1.value);
+        if(r === false){ err.textContent = "Fjalëkalim i gabuar."; return; }
+        dlg.close(); resolve(r); return;
+      }
+      dlg.close(); resolve({ password: p1.value });
+    };
+    dlg.onclose = () => resolve(null);
+    dlg.showModal(); (backup && !enc.checked ? $("#pwOk") : p1).focus();
+  });
+}
+
+/* ---------- Backup ---------- */
+async function doBackup(){
+  await saveNow();
+  const records = await db.all();
+  if(!records.length){ alert("Arkivi është bosh – nuk ka çfarë të ruhet."); return; }
+  const ans = await askPassword("backup");
+  if(!ans) return;
+  const payload = JSON.stringify({ clinic: readForm(clinicForm), records });
+  const head = { app:"gastro-sq", kind:"backup", v:2, created: new Date().toISOString(), count: records.length };
+  const out = ans.password
+    ? { ...head, encrypted: true, ...(await encryptStr(payload, ans.password)) }
+    : { ...head, encrypted: false, ...JSON.parse(payload) };
+  const stamp = new Date().toISOString().slice(0,16).replace("T","_").replace(":","-");
+  download(`gastroskopi_backup_${stamp}${ans.password ? "_enkriptuar" : ""}.json`, JSON.stringify(out), "application/json");
+  store.set(K_LASTBK, Date.now());
+  refreshBadge();
+  $("#bkInfo").textContent = `Backup-i u shkarkua (${records.length} pacientë). Zhvendose në iCloud Drive / USB.`;
+}
+async function restoreBackup(d){
+  let body = d;
+  if(d.encrypted){
+    const r = await askPassword("restore", async pw => { try { return JSON.parse(await decryptStr(d, pw)); } catch { return false; } });
+    if(!r) return;
+    body = r;
+  }
+  const recs = Array.isArray(body.records) ? body.records : [];
+  const existing = new Map((await db.all()).map(r => [r.id, r]));
+  const toPut = []; let added = 0, updated = 0, same = 0;
+  for(const r of recs){
+    if(!r || !r.id || !r.form) continue;
+    const e = existing.get(r.id);
+    if(!e){ added++; toPut.push(r); }
+    else if((r.updated || 0) > (e.updated || 0)){ updated++; toPut.push(r); }
+    else same++;
+  }
+  await db.putMany(toPut);
+  const c = readForm(clinicForm);
+  if(body.clinic && !c.c_name && !c.c_addr){ writeForm(clinicForm, body.clinic); store.set(K_CLINIC, body.clinic); }
+  const mine = toPut.find(r => r.id === cur.id);
+  if(mine) loadRecord(mine);
+  alert(`Rikthimi përfundoi.\n\nTë rinj: ${added}\nTë përditësuar: ${updated}\nTë pandryshuar (kopja në kompjuter është më e re ose e njëjtë): ${same}`);
+  refreshBadge();
+  if(archDlg.open) openArchive();
+}
+$("#b-backup").onclick = doBackup;
+$("#b-restore").onclick = () => $("#jsonIn").click();
+function onChange(){ syncToggles(); render(); saveSoon(); }
+form.addEventListener("input", onChange);
+form.addEventListener("change", onChange);
+clinicForm.addEventListener("input", onChange);
+
+function applyDefaults(){
+  const c = readForm(clinicForm);
+  const set = (n,v) => { const el = form.elements[n]; if(el && !el.value) el.value = v; };
+  set("date", today());
+  if(c.c_endo) set("endo", c.c_endo);
+  if(c.c_scope) set("scope", c.c_scope);
+}
+
+/* ================= Veprimet ================= */
+$("#b-auto").onclick = () => {
+  const ta = form.elements.concl;
+  if(ta.value.trim() && !confirm("Të zëvendësohet konkluzioni aktual?")) return;
+  ta.value = autoConclusion(readForm(form));
+  onChange();
+};
+$("#recBtns").onclick = e => {
+  const b = e.target.closest("[data-rec]"); if(!b) return;
+  const ta = form.elements.recs, line = RECS[b.dataset.rec].t;
+  if(ta.value.includes(line)) return;
+  ta.value = (ta.value.trim() ? ta.value.trim() + "\n" : "") + line;
+  onChange();
+};
+$("#b-normal").onclick = () => {
+  const f = procFlags();
+  if(f.egd) ["e_normal","s_normal","d_normal"].forEach(n => form.elements[n].checked = true);
+  if(f.colo){
+    form.elements.c_normal.checked = true;
+    if(!form.elements.c_reach.value) form.elements.c_reach.value = "cekum";
+    if(!form.elements.c_retro.value) form.elements.c_retro.value = "u krye";
+  }
+  const def = { tolerance:"e mirë", comp:"asnjë", ...(f.egd ? { retro:"u krye", extent:"D2" } : {}) };
+  Object.entries(def).forEach(([n,v]) => { if(!form.elements[n].value || n === "extent") form.elements[n].value = v; });
+  if(!form.elements.concl.value.trim()) form.elements.concl.value = autoConclusion(readForm(form));
+  onChange();
+};
+$("#b-new").onclick = async () => {
+  const f = readForm(form);
+  if(!f.pt_name && !isBlank(f) && !confirm("Ky raport nuk ka emër pacienti, prandaj nuk është ruajtur në arkiv. Të hidhet poshtë?")) return;
+  clearTimeout(saveT);
+  const now = Date.now(), snap = { id: cur.id, created: cur.created || now, updated: now, form: f, imgs };
+  cur = { id: newId(), created: 0 };
+  form.reset(); imgs = []; renderImgs();
+  applyDefaults(); syncToggles(); render();
+  store.set(K_DRAFT, { id: cur.id, created: 0, form: readForm(form) });
+  form.elements.pt_name.focus();
+  if(f.pt_name){
+    try { await db.put(snap); $("#saved").textContent = `${f.pt_name} u ruajt në arkiv`; }
+    catch { $("#saved").textContent = "⚠ Ruajtja në arkiv dështoi"; }
+    refreshBadge();
+  } else $("#saved").textContent = "";
+};
+function missing(){
+  const s = readForm(form), m = [];
+  if(!s.pt_name) m.push("emri i pacientit");
+  if(!s.date) m.push("data e procedurës");
+  if(!s.concl) m.push("konkluzioni");
+  return m;
+}
+$("#b-print").onclick = () => {
+  const m = missing();
+  if(m.length && !confirm("Mungojnë: " + m.join(", ") + ".\nTë printohet gjithsesi?")) return;
+  render(); window.print();
+};
+$("#b-copy").onclick = async () => {
+  const b = $("#b-copy"), txt = renderText(build());
+  try { await navigator.clipboard.writeText(txt); b.textContent = "U kopjua ✓"; }
+  catch { prompt("Kopjo tekstin:", txt); }
+  setTimeout(() => b.textContent = "Kopjo tekstin", 1400);
+};
+function fileBase(){
+  const s = readForm(form);
+  return [(s.pt_name || "pacient").replace(/[^\p{L}\p{N}]+/gu, "_"), s.date || today()].join("_") + "_" + (s.proc || "gastroskopi");
+}
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+function anchorDownload(name, blob){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+function download(name, data, type){
+  const blob = new Blob([data], {type});
+  // Në iPad: fleta "Share" lejon "Save to Files" → iCloud Drive
+  if(isIOS && navigator.canShare){
+    const file = new File([blob], name, {type});
+    if(navigator.canShare({ files: [file] })){
+      const dlg = $("#saveDlg");
+      $("#saveName").textContent = name;
+      $("#saveGo").onclick = () => navigator.share({ files: [file] })
+        .then(() => dlg.close())
+        .catch(err => { if(err.name !== "AbortError"){ dlg.close(); anchorDownload(name, blob); } });
+      dlg.showModal();
+      return;
+    }
+  }
+  anchorDownload(name, blob);
+}
+$("#saveDlg").addEventListener("click", e => { if(e.target.closest("[data-close]") || e.target === e.currentTarget) e.currentTarget.close(); });
+$("#b-txt").onclick = () => download(fileBase() + ".txt", renderText(build()), "text/plain;charset=utf-8");
+$("#b-json").onclick = () => download(fileBase() + ".json",
+  JSON.stringify({ app:"gastro-sq", kind:"patient", v:2, id: cur.id, created: cur.created, updated: Date.now(), form: readForm(form), imgs }), "application/json");
+$("#b-open").onclick = () => $("#jsonIn").click();
+$("#jsonIn").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if(!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if(d.kind === "backup"){ await restoreBackup(d); return; }
+    if(!d.form) throw 0;
+    await saveNow();
+    loadRecord({ id: d.id || newId(), created: d.created || 0, form: d.form, imgs: d.imgs });
+    saveNow();
+  } catch(err) { console.error(err); alert("Skedari nuk është një raport ose backup i vlefshëm."); }
+};
+document.addEventListener("keydown", e => {
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p"){ e.preventDefault(); $("#b-print").click(); }
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s"){ e.preventDefault(); saveNow(); }
+});
+
+/* ================= Fotot dhe logoja ================= */
+function scaleImage(file, max, q=.85){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const cv = document.createElement("canvas");
+      cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+      cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url);
+      res(cv.toDataURL(file.type === "image/png" && max <= 600 ? "image/png" : "image/jpeg", q));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(); };
+    img.src = url;
+  });
+}
+function renderImgs(){
+  $("#imgs").innerHTML = imgs.map((im,i) => `
+    <figure><img src="${im.src}" alt="">
+      <figcaption><input type="text" data-cap="${i}" value="${esc(im.cap)}" placeholder="${i+1}. përshkrimi">
+      <button type="button" data-rm="${i}" title="Hiq">✕</button></figcaption></figure>`).join("");
+}
+async function addImages(files){
+  for(const f of files){
+    if(!f.type.startsWith("image/")) continue;
+    try { imgs.push({ src: await scaleImage(f, 1000), cap: "" }); } catch {}
+  }
+  renderImgs(); render(); saveSoon();
+}
+const drop = $("#drop");
+drop.onclick = () => $("#imgIn").click();
+$("#imgIn").onchange = e => { addImages([...e.target.files]); e.target.value = ""; };
+drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+drop.ondragleave = () => drop.classList.remove("over");
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); addImages([...e.dataTransfer.files]); };
+$("#imgs").addEventListener("input", e => {
+  const i = e.target.dataset.cap; if(i === undefined) return;
+  e.stopPropagation(); imgs[i].cap = e.target.value; render(); saveSoon();
+});
+$("#imgs").addEventListener("click", e => {
+  const i = e.target.dataset.rm; if(i === undefined) return;
+  imgs.splice(i, 1); renderImgs(); render(); saveSoon();
+});
+const clinicDlg = $("#clinicDlg");
+function renderLogo(){
+  const v = clinicForm.elements.c_logo.value;
+  $("#logoBox").innerHTML = v ? `<img src="${v}" alt="Logo">` : "Kliko ose tërhiq<br>logon këtu";
+  $("#b-logo-x").hidden = !v;
+}
+function openClinic(){ renderLogo(); clinicDlg.showModal(); }
+$("#b-clinic").onclick = openClinic;
+$("#report").addEventListener("click", e => { if(e.target.closest(".rh")) openClinic(); });
+clinicDlg.addEventListener("click", e => { if(e.target.closest("[data-close]") || e.target === clinicDlg) clinicDlg.close(); });
+clinicDlg.addEventListener("close", saveNow);
+async function setLogo(file){
+  if(!file || !file.type.startsWith("image/")) return;
+  try { clinicForm.elements.c_logo.value = await scaleImage(file, 600, .92); } catch { alert("Fotoja nuk u lexua."); return; }
+  renderLogo(); onChange();
+}
+$("#b-logo").onclick = () => $("#logoIn").click();
+$("#logoBox").onclick = () => $("#logoIn").click();
+$("#logoIn").onchange = e => { setLogo(e.target.files[0]); e.target.value = ""; };
+$("#logoBox").ondragover = e => { e.preventDefault(); $("#logoBox").classList.add("over"); };
+$("#logoBox").ondragleave = () => $("#logoBox").classList.remove("over");
+$("#logoBox").ondrop = e => { e.preventDefault(); $("#logoBox").classList.remove("over"); setLogo(e.dataTransfer.files[0]); };
+$("#b-logo-x").onclick = () => { clinicForm.elements.c_logo.value = ""; renderLogo(); onChange(); };
+
+/* ================= Nisja ================= */
+(async () => {
+  writeForm(clinicForm, store.get(K_CLINIC) || {});
+  let draft = store.get(K_DRAFT);
+  if(draft && !draft.form) draft = { form: draft };          // draft nga versioni i mëparshëm
+  if(draft){
+    cur = { id: draft.id || newId(), created: draft.created || 0 };
+    writeForm(form, draft.form);
+    try { const r = await db.get(cur.id); if(r) imgs = r.imgs || []; renderImgs(); } catch {}
+  }
+  applyDefaults();
+  syncToggles();
+  render();
+  try { await navigator.storage?.persist?.(); } catch {}
+  if("serviceWorker" in navigator && location.protocol.startsWith("http"))
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  refreshBadge();
+  if(!readForm(clinicForm).c_name && !store.get("gastro_sq_clinic_asked")){
+    store.set("gastro_sq_clinic_asked", 1);
+    openClinic();
+  }
+})();
+</script>
+</body>
+</html>
